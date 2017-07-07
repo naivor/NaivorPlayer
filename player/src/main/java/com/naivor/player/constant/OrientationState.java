@@ -14,58 +14,28 @@
  *  limitations under the License.
  */
 
-package com.naivor.player.controll;
+package com.naivor.player.constant;
+
+import android.support.annotation.IntDef;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
- * 播放控制器
+ * 视频方向，如横屏，竖屏
  *
- * Created by tianlai on 17-7-6.
+ * Created by tianlai on 17-7-7.
  */
 
-public interface PlayController {
+public final class OrientationState {
 
-    /**
-     * 播放
-     *
-     */
-    void start();
+    public static final int ORIENTATION_TYPE_PORTRAIT = 0;
+    public static final int ORIENTATION_TYPE_LANDSCAPE = 1;
+    public static final int ORIENTATION_TYPE_SENSOR = 2;
 
-    /**
-     * 暂停播放
-     *
-     */
-    void pause();
+    @IntDef({ORIENTATION_TYPE_SENSOR, ORIENTATION_TYPE_PORTRAIT, ORIENTATION_TYPE_LANDSCAPE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface OrientationType {
 
-    /**
-     * 继续播放
-     *
-     */
-    void resume();
-
-    /**
-     * 上一曲
-     */
-    void previous();
-
-    /**
-     * 下一曲
-     */
-    void next();
-
-
-    /**
-     * 停止播放
-     */
-    void stop();
-
-    /**
-     * 重新播放
-     */
-    void rePlay();
-
-    /**
-     * 释放资源
-     */
-    void release();
-
+    }
 }

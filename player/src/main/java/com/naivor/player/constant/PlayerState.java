@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.naivor.player.controll;
+package com.naivor.player.constant;
 
 import android.support.annotation.IntDef;
 
@@ -27,9 +27,9 @@ import java.lang.annotation.RetentionPolicy;
  * Created by tianlai on 17-7-6.
  */
 
-public final class VideoState {
+public final class PlayerState {
 
-    private VideoState() {
+    private PlayerState() {
     }
 
     public static final int CURRENT_STATE_ORIGIN = 0;
@@ -44,7 +44,7 @@ public final class VideoState {
     @IntDef({CURRENT_STATE_ORIGIN, CURRENT_STATE_PREPARING, CURRENT_STATE_PLAYING,
             CURRENT_STATE_PLAYING_BUFFERING, CURRENT_STATE_PAUSE, CURRENT_STATE_COMPLETE, CURRENT_STATE_ERROR})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface PlayerState {
+    public @interface PlayerStateType {
     }
 
 
@@ -54,12 +54,12 @@ public final class VideoState {
      * @param state
      * @return
      */
-    public static String getVideoStateName(@PlayerState int state) {
+    public static String getVideoStateName(@PlayerStateType int state) {
         String stateName = null;
 
         switch (state) {
             case CURRENT_STATE_ORIGIN:
-                stateName = "原始状态";
+                stateName = "初始状态";
                 break;
             case CURRENT_STATE_PREPARING:
                 stateName = "准备中";

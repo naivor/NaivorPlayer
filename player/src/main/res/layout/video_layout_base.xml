@@ -4,12 +4,12 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <FrameLayout
+    <AspectRatioFrameLayout
         android:id="@+id/surface_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    </FrameLayout>
+    </AspectRatioFrameLayout>
 
     <LinearLayout
         android:id="@+id/layout_bottom"

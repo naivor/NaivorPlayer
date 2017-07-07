@@ -16,56 +16,52 @@
 
 package com.naivor.player.controll;
 
+import com.naivor.player.constant.OrientationState;
+import com.naivor.player.constant.ScreenState;
+
 /**
- * 播放控制器
- *
- * Created by tianlai on 17-7-6.
+ * 视频控制器
+ * <p>
+ * Created by tianlai on 17-7-7.
  */
 
-public interface PlayController {
+public interface VideoController extends PositionController, PlayController {
+
 
     /**
-     * 播放
+     * 设置视频播放时窗口的方向
      *
+     * @param windowType
+     * @param orientation
      */
-    void start();
+    void setOrientation(@ScreenState.ScreenStateType int windowType, @OrientationState.OrientationType int orientation);
+
 
     /**
-     * 暂停播放
+     * 是否正在播放
      *
+     * @return
      */
-    void pause();
+    boolean isPlaying();
 
     /**
-     * 继续播放
+     * 是否暂停状态
      *
+     * @return
      */
-    void resume();
+    boolean isPause();
 
     /**
-     * 上一曲
+     * 是否准备状态
+     *
+     * @return
      */
-    void previous();
+    boolean isPrepare();
 
     /**
-     * 下一曲
+     * 是否缓冲状态
+     *
+     * @return
      */
-    void next();
-
-
-    /**
-     * 停止播放
-     */
-    void stop();
-
-    /**
-     * 重新播放
-     */
-    void rePlay();
-
-    /**
-     * 释放资源
-     */
-    void release();
-
+    boolean isBuffering();
 }

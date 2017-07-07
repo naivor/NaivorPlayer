@@ -17,55 +17,41 @@
 package com.naivor.player.controll;
 
 /**
- * 播放控制器
+ * 位置控制器
  *
- * Created by tianlai on 17-7-6.
+ * Created by tianlai on 17-7-7.
  */
 
-public interface PlayController {
+public interface PositionController {
 
     /**
-     * 播放
+     * 从某个位置开始播放
      *
+     * @param millisecond
      */
-    void start();
+    void seekTo(long millisecond);
 
     /**
-     * 暂停播放
+     * 快进
+     */
+    void fastward(long millisecond);
+
+    /**
+     * 快退
+     */
+    void backward(long millisecond);
+
+    /**
+     * 获取当前播放位置
      *
+     * @return
      */
-    void pause();
+    long getCurrentDuration();
 
     /**
-     * 继续播放
+     * 总的播放位置
      *
+     * @return
      */
-    void resume();
-
-    /**
-     * 上一曲
-     */
-    void previous();
-
-    /**
-     * 下一曲
-     */
-    void next();
-
-
-    /**
-     * 停止播放
-     */
-    void stop();
-
-    /**
-     * 重新播放
-     */
-    void rePlay();
-
-    /**
-     * 释放资源
-     */
-    void release();
-
+    long getTotalDuration();
 }

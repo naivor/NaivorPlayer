@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.naivor.player.controll;
+package com.naivor.player.constant;
 
 import android.support.annotation.IntDef;
 
@@ -27,9 +27,9 @@ import java.lang.annotation.RetentionPolicy;
  * Created by tianlai on 17-7-6.
  */
 
-public final class SurfaceState {
+public final class ScreenState {
 
-    private SurfaceState() {
+    private ScreenState() {
     }
 
     public static final int SCREEN_LAYOUT_ORIGIN = 0;
@@ -41,7 +41,7 @@ public final class SurfaceState {
     @IntDef({SCREEN_LAYOUT_ORIGIN, SCREEN_LAYOUT_LIST, SCREEN_WINDOW_FULLSCREEN,
             SCREEN_WINDOW_TINY})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface ScreenState {
+    public @interface ScreenStateType {
     }
 
 

@@ -30,6 +30,8 @@ dependencies {
 
     compile rootProject.ext.dependencies.appcompat_v7
 
+    compile rootProject.ext.dependencies.exoplayer
+
     compile rootProject.ext.dependencies.timber
 
     provided rootProject.ext.dependencies.lombok
