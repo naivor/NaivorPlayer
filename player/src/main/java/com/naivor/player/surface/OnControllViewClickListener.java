@@ -14,53 +14,34 @@
  *  limitations under the License.
  */
 
-package com.naivor.player.controll;
+package com.naivor.player.surface;
+
+import android.view.View;
 
 /**
- * 播放控制器
+ * 控制栏的点击监听
  *
- * Created by tianlai on 17-7-6.
+ * Created by tianlai on 17-7-11.
  */
 
-public interface PlayController {
+public interface OnControllViewClickListener {
 
     /**
-     * 播放
+     * 点击
      *
+     * @param view
      */
-    void start();
+    void onclick(View view);
 
     /**
-     * 暂停播放
+     * 全屏点击事件
+     */
+    void onFullScreenClick();
+
+    /**
+     * 控制栏显示，隐藏状态监听
      *
+     * @param visibility
      */
-    void pause();
-
-    /**
-     * 继续播放
-     *
-     */
-    void resume();
-
-    /**
-     * 上一曲
-     */
-    void previous();
-
-    /**
-     * 下一曲
-     */
-    void next();
-
-
-    /**
-     * 停止播放
-     */
-    void stop();
-
-    /**
-     * 重新播放
-     */
-    void rePlay();
-
+    void onVisibilityChange(int visibility);
 }

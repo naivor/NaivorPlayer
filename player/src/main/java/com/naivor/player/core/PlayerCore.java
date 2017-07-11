@@ -16,42 +16,29 @@
 package com.naivor.player.core;
 
 import android.content.Context;
-import android.graphics.Point;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Looper;
-import android.os.Message;
 import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 
+import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
-import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Renderer;
 import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.upstream.Allocator;
 
 import lombok.NonNull;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * 播放器核心
  * <p>
  * Created by tianlai on 17-7-7.
  */
-public class PlayerCore implements ExoPlayer.EventListener, LoadControl {
+public class PlayerCore {
 
     private Context context;
 
@@ -60,24 +47,18 @@ public class PlayerCore implements ExoPlayer.EventListener, LoadControl {
 
     private SimpleExoPlayer player;
 
-    private static PlayerCore playerCore;
-
     private View surfaceView;
 
-    private static MediaSource mediaSource;    //音频数据源
+    private MediaSource mediaSource;    //音频数据源
     private boolean haveResetPosition = true;   //是否重置播放位置
     private boolean haveResetState;   //是否重置状态
 
-    private int currentVideoWidth = 0;
-    private int currentVideoHeight = 0;
+    private LoadControl loadControl;  //加载状态监听
 
-    private static final int HANDLER_PREPARE = 0;
-    private static final int HANDLER_RELEASE = 2;
+    private ExoPlayer.EventListener eventListener;  //事件监听
 
-    HandlerThread mMediaHandlerThread;
-    MediaHandler mMediaHandler;
-    Handler mainThreadHandler;
 
+    private static PlayerCore playerCore;
     /**
      * 单例
      *
@@ -99,161 +80,46 @@ public class PlayerCore implements ExoPlayer.EventListener, LoadControl {
     private PlayerCore(@NonNull Context context) {
         this.context = context;
 
-        mMediaHandlerThread = new HandlerThread(TAG);
-        mMediaHandlerThread.start();
-        mMediaHandler = new MediaHandler((mMediaHandlerThread.getLooper()));
-        mainThreadHandler = new Handler();
-
         renderersFactory = new DefaultRenderersFactory(context);
         trackSelector = new DefaultTrackSelector();
+
+        loadControl = new DefaultLoadControl();
+
+        player = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, loadControl);
     }
 
-    public Point getVideoSize() {
-        if (currentVideoWidth != 0 && currentVideoHeight != 0) {
-            return new Point(currentVideoWidth, currentVideoHeight);
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public void onTimelineChanged(Timeline timeline, Object o) {
-
-    }
-
-    @Override
-    public void onTracksChanged(TrackGroupArray trackGroupArray, TrackSelectionArray trackSelectionArray) {
-
-    }
-
-    @Override
-    public void onLoadingChanged(boolean b) {
-
-    }
-
-    @Override
-    public void onPlayerStateChanged(boolean b, int i) {
-
-    }
-
-    @Override
-    public void onPlayerError(ExoPlaybackException e) {
-
-    }
-
-    @Override
-    public void onPositionDiscontinuity() {
-
-    }
-
-    @Override
-    public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-
-    }
-
-    @Override
-    public void onPrepared() {
-
-    }
-
-    @Override
-    public void onTracksSelected(Renderer[] renderers, TrackGroupArray trackGroupArray, TrackSelectionArray trackSelectionArray) {
-
-    }
-
-    @Override
-    public void onStopped() {
-
-    }
-
-    @Override
-    public void onReleased() {
-
-    }
-
-    @Override
-    public Allocator getAllocator() {
-        return null;
-    }
-
-    @Override
-    public boolean shouldStartPlayback(long l, boolean b) {
-        return false;
-    }
-
-    @Override
-    public boolean shouldContinueLoading(long l) {
-        return false;
-    }
-
-    public class MediaHandler extends Handler {
-        public MediaHandler(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch (msg.what) {
-                case HANDLER_PREPARE:
-                    initPlayer();
-                    break;
-                case HANDLER_RELEASE:
-                    player.release();
-                    break;
-            }
-        }
-
-    }
-
-    /**
-     * 初始化播放器
-     */
-    private void initPlayer() {
-        try {
-            currentVideoWidth = 0;
-            currentVideoHeight = 0;
-
-            player = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, this);
-
-            if (surfaceView instanceof TextureView) {
-                player.setVideoTextureView((TextureView) surfaceView);
-            } else if (surfaceView instanceof SurfaceView) {
-                player.setVideoSurfaceView((SurfaceView) surfaceView);
-            }
-            player.addListener(this);
-
-            player.prepare(mediaSource, haveResetPosition, haveResetState);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * 准备视频
      */
     public void prepare() {
-        release();
-        Message msg = new Message();
-        msg.what = HANDLER_PREPARE;
-        mMediaHandler.sendMessage(msg);
+        if (surfaceView != null) {
+            if (surfaceView instanceof TextureView) {
+                player.setVideoTextureView((TextureView) surfaceView);
+            } else if (surfaceView instanceof SurfaceView) {
+                player.setVideoSurfaceView((SurfaceView) surfaceView);
+            }
+        } else {
+            throw new NullPointerException("surfaceView can't  be  null");
+        }
+
+        if (eventListener != null) {
+            player.addListener(eventListener);
+        }
+
+        if (mediaSource != null) {
+            player.prepare(mediaSource, haveResetPosition, haveResetState);
+        } else {
+            throw new NullPointerException("mediaSource can't  be  null,please give a mediaSource to play");
+        }
     }
 
-    /**
-     * 释放资源
-     */
-    public void release() {
-        Message msg = new Message();
-        msg.what = HANDLER_RELEASE;
-        mMediaHandler.sendMessage(msg);
-    }
 
     public RenderersFactory getRenderersFactory() {
         return renderersFactory;
     }
 
-    public void setRenderersFactory(RenderersFactory renderersFactory) {
+    public void setRenderersFactory(@NonNull RenderersFactory renderersFactory) {
         this.renderersFactory = renderersFactory;
     }
 
@@ -261,7 +127,7 @@ public class PlayerCore implements ExoPlayer.EventListener, LoadControl {
         return trackSelector;
     }
 
-    public void setTrackSelector(TrackSelector trackSelector) {
+    public void setTrackSelector(@NonNull TrackSelector trackSelector) {
         this.trackSelector = trackSelector;
     }
 
@@ -269,7 +135,7 @@ public class PlayerCore implements ExoPlayer.EventListener, LoadControl {
         return player;
     }
 
-    public void setPlayer(SimpleExoPlayer player) {
+    public void setPlayer(@NonNull SimpleExoPlayer player) {
         this.player = player;
     }
 
@@ -277,7 +143,31 @@ public class PlayerCore implements ExoPlayer.EventListener, LoadControl {
         return surfaceView;
     }
 
-    public void setSurfaceView(View surfaceView) {
+    public void setSurfaceView(@NonNull View surfaceView) {
         this.surfaceView = surfaceView;
+    }
+
+    public MediaSource getMediaSource() {
+        return mediaSource;
+    }
+
+    public void setMediaSource(@NonNull MediaSource mediaSource) {
+        this.mediaSource = mediaSource;
+    }
+
+    public LoadControl getLoadControl() {
+        return loadControl;
+    }
+
+    public void setLoadControl(LoadControl loadControl) {
+        this.loadControl = loadControl;
+    }
+
+    public ExoPlayer.EventListener getEventListener() {
+        return eventListener;
+    }
+
+    public void setEventListener(ExoPlayer.EventListener eventListener) {
+        this.eventListener = eventListener;
     }
 }

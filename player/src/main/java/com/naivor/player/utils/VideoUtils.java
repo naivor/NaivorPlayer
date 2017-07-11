@@ -47,14 +47,14 @@ public final class VideoUtils {
      * @param millisecond
      * @return
      */
-    public static String formateTime(int millisecond) {
+    public static String formateTime(long millisecond) {
         if (millisecond <= 0 || millisecond >= 24 * 60 * 60 * 1000) {
             return "00:00";
         }
-        int totalSeconds = millisecond / 1000;
-        int seconds = totalSeconds % 60;
-        int minutes = (totalSeconds / 60) % 60;
-        int hours = totalSeconds / 3600;
+        long totalSeconds = millisecond / 1000;
+        int seconds = (int) (totalSeconds % 60);
+        int minutes = (int) ((totalSeconds / 60) % 60);
+        int hours = (int) (totalSeconds / 3600);
         StringBuilder stringBuilder = new StringBuilder();
         Formatter mFormatter = new Formatter(stringBuilder, Locale.getDefault());
         if (hours > 0) {

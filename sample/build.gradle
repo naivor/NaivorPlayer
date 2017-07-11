@@ -34,6 +34,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
+    compile project(":player")
 
     compile rootProject.ext.dependencies.appcompat_v7
     compile rootProject.ext.dependencies.recyclerview
@@ -41,6 +42,7 @@ dependencies {
     compile rootProject.ext.dependencies.timber
 
     provided rootProject.ext.dependencies.lombok
+    provided rootProject.ext.dependencies.annotation
 
     testCompile rootProject.ext.dependencies.junit
 }
