@@ -16,6 +16,7 @@
 
 package com.naivor.player.surface;
 
+import android.support.annotation.DrawableRes;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -26,6 +27,7 @@ import android.widget.TextView;
 import com.naivor.player.R;
 
 import lombok.NonNull;
+import timber.log.Timber;
 
 /**
  * 控制栏view容器
@@ -67,7 +69,10 @@ public class ControlViewHolder {
     /**
      * 显示控制栏
      */
-    public void show(boolean isThumb) {
+    public void show() {
+
+        Timber.d("显示");
+
         if (topLayout != null) {
             topLayout.setVisibility(View.VISIBLE);
         }
@@ -76,6 +81,12 @@ public class ControlViewHolder {
         }
 
         if (playButton != null) {
+            boolean isThumb = false;
+
+            if (thumbBar != null && thumbBar.isShown()) {
+                isThumb = true;
+            }
+
             if (isThumb) {
                 playButton.setVisibility(View.GONE);
             } else {
@@ -90,6 +101,9 @@ public class ControlViewHolder {
      * @param isStart
      */
     public void hide(boolean isStart) {
+
+        Timber.d("隐藏，是否开始：%s", isStart);
+
         if (topLayout != null) {
             topLayout.setVisibility(View.GONE);
         }
@@ -108,17 +122,45 @@ public class ControlViewHolder {
      * @param isThumb
      */
     public void showThumb(boolean isThumb) {
-        if (playButton != null) {
-            playButton.setVisibility(View.GONE);
+
+        Timber.d("缓冲：%s", isThumb);
+
+        boolean isShown = false;
+
+        if (buttomLayout != null && buttomLayout.isShown()) {
+            isShown = true;
         }
 
         if (thumbBar != null) {
             if (isThumb) {
+                playButton.setVisibility(View.GONE);
                 thumbBar.setVisibility(View.VISIBLE);
             } else {
                 thumbBar.setVisibility(View.GONE);
+
+                if (isShown) {
+                    playButton.setVisibility(View.VISIBLE);
+                }
             }
         }
 
     }
+
+    /**
+     * 重置播放按钮
+     */
+    public void showPlayButton(@DrawableRes int res) {
+
+        if (thumbBar != null) {
+            thumbBar.setVisibility(View.GONE);
+        }
+
+        if (playButton != null) {
+
+            playButton.setImageResource(res);
+
+            playButton.setVisibility(View.VISIBLE);
+        }
+    }
+
 }

@@ -41,7 +41,7 @@ public final class ScreenState {
     @IntDef({SCREEN_LAYOUT_ORIGIN, SCREEN_LAYOUT_LIST, SCREEN_WINDOW_FULLSCREEN,
             SCREEN_WINDOW_TINY})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface ScreenStateType {
+    public @interface ScreenStateValue {
     }
 
 

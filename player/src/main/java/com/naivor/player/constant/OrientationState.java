@@ -35,7 +35,7 @@ public final class OrientationState {
 
     @IntDef({ORIENTATION_TYPE_SENSOR, ORIENTATION_TYPE_PORTRAIT, ORIENTATION_TYPE_LANDSCAPE})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface OrientationType {
+    public @interface OrientationVlaue {
 
     }
 }

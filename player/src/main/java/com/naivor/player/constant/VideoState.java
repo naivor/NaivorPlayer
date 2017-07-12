@@ -27,9 +27,9 @@ import java.lang.annotation.RetentionPolicy;
  * Created by tianlai on 17-7-6.
  */
 
-public final class PlayerState {
+public final class VideoState {
 
-    private PlayerState() {
+    private VideoState() {
     }
 
     public static final int CURRENT_STATE_ORIGIN = 0;
@@ -44,7 +44,7 @@ public final class PlayerState {
     @IntDef({CURRENT_STATE_ORIGIN, CURRENT_STATE_PREPARING, CURRENT_STATE_PLAYING,
             CURRENT_STATE_PLAYING_BUFFERING, CURRENT_STATE_PAUSE, CURRENT_STATE_COMPLETE, CURRENT_STATE_ERROR})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface PlayerStateType {
+    public @interface VideoStateValue {
     }
 
 
@@ -54,7 +54,7 @@ public final class PlayerState {
      * @param state
      * @return
      */
-    public static String getVideoStateName(@PlayerStateType int state) {
+    public static String getVideoStateName(@VideoStateValue int state) {
         String stateName = null;
 
         switch (state) {

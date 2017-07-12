@@ -18,13 +18,16 @@ package com.naivor.player.surface;
 
 import android.view.View;
 
+import com.naivor.player.constant.ScreenState;
+import com.naivor.player.constant.VideoState;
+
 /**
  * 控制栏的点击监听
- *
+ * <p>
  * Created by tianlai on 17-7-11.
  */
 
-public interface OnControllViewClickListener {
+public interface OnControllViewListener {
 
     /**
      * 点击
@@ -44,4 +47,53 @@ public interface OnControllViewClickListener {
      * @param visibility
      */
     void onVisibilityChange(int visibility);
+
+    /**
+     * 播放进度回调
+     *
+     * @param progress
+     */
+    void onProgress(int progress, int bufferedProgress);
+
+    /**
+     * 改变音量
+     *
+     * @param offset
+     * @param total
+     */
+    void changeVolume(float offset, float total);
+
+    /**
+     * 改变亮度
+     *
+     * @param offset
+     * @param total
+     */
+    void changeBrightness(float offset, float total);
+
+    /**
+     * 改变播放位置
+     */
+    void changePlayingPosition(float offset, float total);
+
+    /**
+     * 屏幕状态
+     *
+     * @return
+     */
+    @ScreenState.ScreenStateValue
+    int getScreenState();
+
+    /**
+     * 播放状态
+     *
+     * @return
+     */
+    @VideoState.VideoStateValue
+    int getCurrentState();
+
+    /**
+     * 结束触碰屏幕
+     */
+    void onTouchScreenEnd();
 }

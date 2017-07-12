@@ -34,7 +34,8 @@ public interface VideoController extends PositionController, PlayController {
      * @param windowType
      * @param orientation
      */
-    void setOrientation(@ScreenState.ScreenStateType int windowType, @OrientationState.OrientationType int orientation);
+    void setOrientation(@ScreenState.ScreenStateValue int windowType,
+                        @OrientationState.OrientationVlaue int orientation);
 
 
     /**
