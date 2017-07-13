@@ -241,11 +241,14 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 显示播放错误
      */
-    public void showError() {
+    public void onError() {
+        Timber.d("播放出错");
+
         stop();
 
         if (viewHolder != null) {
-            viewHolder.showPlayButton(R.drawable.jc_click_error_selector);
+            viewHolder.playButton.setVisibility(VISIBLE);
+            updatePlayPauseButton(true);
         }
     }
 
@@ -253,14 +256,14 @@ public class ControlView extends FrameLayout implements PlayController, Position
      * 播放完成
      */
     public void onComplete() {
-        //TODO 逻辑处理
+        Timber.d("播放完成");
 
         stop();
 
-        seekTo(0);
 
-        if (viewHolder != null) {
-            viewHolder.showPlayButton(R.drawable.jc_click_play_selector);
+        if (viewHolder.playButton != null) {
+            viewHolder.playButton.setVisibility(VISIBLE);
+            updatePlayPauseButton();
         }
     }
 
@@ -271,7 +274,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
         Timber.d("隐藏控制界面");
 
         if (viewHolder.isShown()) {
-            viewHolder.hide(player.getPlayWhenReady() && !isError());
+            boolean hidePlayButton = player.getPlayWhenReady() && !shouldHidePlayBtn();
+            viewHolder.hide(hidePlayButton);
             if (onControllViewListener != null) {
                 onControllViewListener.onVisibilityChange(viewHolder.buttomLayout.getVisibility());
             }
@@ -299,6 +303,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
      * 控制栏超时隐藏
      */
     private void hideAfterTimeout() {
+        Timber.d("超时隐藏");
+
         removeCallbacks(hideAction);
         if (showTimeoutMs > 0) {
             hideAtMs = SystemClock.uptimeMillis() + showTimeoutMs;
@@ -314,6 +320,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
      * 全部更新
      */
     private void updateAll() {
+        Timber.d("更新控制界面");
+
         updatePlayPauseButton();
         updateNavigation();
         updateProgress();
@@ -322,14 +330,23 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 播放按钮状态更新
      */
-    private void updatePlayPauseButton() {
+    protected void updatePlayPauseButton() {
+        updatePlayPauseButton(false);
+    }
+
+    private void updatePlayPauseButton(boolean isError) {
+
+        Timber.d("更新播放按钮");
+
         if (!isVisible() || !isAttachedToWindow) {
             return;
         }
 
-        if (viewHolder.playButton != null && !isError()) {
-
-            if (player != null && player.getPlayWhenReady()) {
+        if (viewHolder.playButton != null) {
+            if (isError) {
+                viewHolder.showPlayButton(R.drawable.jc_click_error_selector);
+            } else if (player != null && player.getPlayWhenReady()
+                    && player.getPlaybackState() == ExoPlayer.STATE_READY) {
                 viewHolder.playButton.setImageResource(R.drawable.jc_click_pause_selector);
             } else {
                 viewHolder.playButton.setImageResource(R.drawable.jc_click_play_selector);
@@ -343,13 +360,14 @@ public class ControlView extends FrameLayout implements PlayController, Position
      *
      * @return
      */
-    private boolean isError() {
-        boolean isError = false;
+    private boolean shouldHidePlayBtn() {
+        boolean hide = false;
 
         if (onControllViewListener != null) {
-            isError = onControllViewListener.getCurrentState() == VideoState.CURRENT_STATE_ERROR;
+            hide = onControllViewListener.getCurrentState() != VideoState.CURRENT_STATE_PLAYING;
         }
-        return isError;
+
+        return hide;
     }
 
     /**
@@ -520,6 +538,10 @@ public class ControlView extends FrameLayout implements PlayController, Position
     @Override
     public void start() {
         player.setPlayWhenReady(true);
+
+        if (onControllViewListener != null) {
+            onControllViewListener.prepareSourceData();
+        }
     }
 
     @Override
@@ -564,13 +586,14 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
     @Override
     public void stop() {
+
         player.stop();
     }
 
     @Override
     public void rePlay() {
-        //TODO 逻辑处理
-
+        stop();
+        start();
     }
 
     private void rewind() {
@@ -787,6 +810,21 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+
+            switch (playbackState) {
+                case ExoPlayer.STATE_IDLE:
+                    return;
+                case ExoPlayer.STATE_BUFFERING:
+                    showBuffering(true);
+                    break;
+                case ExoPlayer.STATE_READY:
+                    showBuffering(false);
+                    break;
+                case ExoPlayer.STATE_ENDED:
+                    onComplete();
+                    break;
+            }
+
             updatePlayPauseButton();
             updateProgress();
         }
@@ -821,21 +859,34 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
         @Override
         public void onPlayerError(ExoPlaybackException error) {
-            // Do nothing.
+            onError();
         }
 
         @Override
         public void onClick(View view) {
+            boolean isPause = false;
+            boolean isComplete = false;
+
             if (onControllViewListener != null) {
                 onControllViewListener.onclick(view);
+
+                int state = onControllViewListener.getCurrentState();
+                isPause = state == VideoState.CURRENT_STATE_PAUSE;
+                isComplete = state == VideoState.CURRENT_STATE_COMPLETE;
             }
 
             if (player != null) {
                 if (viewHolder.playButton == view) {
-                    if (player.getPlayWhenReady()) {
+                    if (isComplete) {
+                        rePlay();
+                    } else if (player.getPlayWhenReady()) {
                         pause();
                     } else {
-                        start();
+                        if (isPause) {
+                            view.setVisibility(GONE);
+                        }
+
+                        resume();
                     }
 
                 } else if (viewHolder.fullScreenButton == view) {

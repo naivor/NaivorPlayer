@@ -96,4 +96,9 @@ public interface OnControllViewListener {
      * 结束触碰屏幕
      */
     void onTouchScreenEnd();
+
+    /**
+     * 准备播放的资源
+     */
+    void prepareSourceData();
 }

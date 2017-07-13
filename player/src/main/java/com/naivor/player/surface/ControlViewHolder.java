@@ -62,8 +62,25 @@ public class ControlViewHolder {
 
     }
 
+    /**
+     * 控制栏是否显示
+     *
+     * @return
+     */
     public boolean isShown() {
-        return topLayout.isShown() || buttomLayout.isShown();
+        boolean isShown = false;
+
+        if (topLayout != null) {
+            isShown = topLayout.isShown();
+        }
+        if (buttomLayout != null) {
+            isShown = isShown || buttomLayout.isShown();
+        }
+
+//        if (playButton != null) {
+//            isShown = isShown || playButton.isShown();
+//        }
+        return isShown;
     }
 
     /**
@@ -98,11 +115,11 @@ public class ControlViewHolder {
     /**
      * 隐藏控制栏
      *
-     * @param isStart
+     * @param hidePlayButton
      */
-    public void hide(boolean isStart) {
+    public void hide(boolean hidePlayButton) {
 
-        Timber.d("隐藏，是否开始：%s", isStart);
+        Timber.d("隐藏，是否开始：%s", hidePlayButton);
 
         if (topLayout != null) {
             topLayout.setVisibility(View.GONE);
@@ -111,8 +128,18 @@ public class ControlViewHolder {
             buttomLayout.setVisibility(View.GONE);
         }
 
-        if (playButton != null && isStart) {
-            playButton.setVisibility(View.GONE);
+        if (playButton != null) {
+            boolean isThumb = false;
+
+            if (thumbBar != null && thumbBar.isShown()) {
+                isThumb = true;
+            }
+
+            if (isThumb || hidePlayButton) {
+                playButton.setVisibility(View.GONE);
+            } else {
+                playButton.setVisibility(View.VISIBLE);
+            }
         }
     }
 

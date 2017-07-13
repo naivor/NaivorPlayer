@@ -284,10 +284,7 @@ public class VideoPlayer extends FrameLayout implements View.OnClickListener, On
 
     @Override
     public void start() {
-
-        resume();
-
-        prepareMediaPlayer();
+        controlView.start();
     }
 
     @Override
@@ -415,13 +412,10 @@ public class VideoPlayer extends FrameLayout implements View.OnClickListener, On
                 break;
             case VideoState.CURRENT_STATE_PLAYING_BUFFERING:
                 onPrepared();
-                controlView.showBuffering(true);
                 break;
             case VideoState.CURRENT_STATE_ERROR:
-                controlView.showError();
                 break;
             case VideoState.CURRENT_STATE_COMPLETE:
-                controlView.onComplete();
                 break;
         }
 
@@ -708,7 +702,7 @@ public class VideoPlayer extends FrameLayout implements View.OnClickListener, On
 
         switch (i) {
             case ExoPlayer.STATE_IDLE:
-                setVideoState(VideoState.CURRENT_STATE_ERROR);
+//                setVideoState(VideoState.CURRENT_STATE_ERROR);
                 break;
             case ExoPlayer.STATE_BUFFERING:
                 setVideoState(VideoState.CURRENT_STATE_PLAYING_BUFFERING);
@@ -719,7 +713,6 @@ public class VideoPlayer extends FrameLayout implements View.OnClickListener, On
                 } else {
                     setVideoState(VideoState.CURRENT_STATE_PAUSE);
                 }
-                controlView.showBuffering(false);
                 break;
             case ExoPlayer.STATE_ENDED:
                 setVideoState(VideoState.CURRENT_STATE_COMPLETE);
@@ -864,6 +857,11 @@ public class VideoPlayer extends FrameLayout implements View.OnClickListener, On
     @Override
     public void onTouchScreenEnd() {
         Timber.d("onTouchScreenEnd");
+    }
+
+    @Override
+    public void prepareSourceData() {
+        prepareMediaPlayer();
     }
 
 
