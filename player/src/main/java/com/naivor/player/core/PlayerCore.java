@@ -56,7 +56,7 @@ public class PlayerCore {
     private LoadControl loadControl;  //加载状态监听
 
     private ExoPlayer.EventListener eventListener;  //事件监听
-
+    private SimpleExoPlayer.VideoListener  videoListener; //事件监听
 
     private static PlayerCore playerCore;
     /**
@@ -105,6 +105,10 @@ public class PlayerCore {
 
         if (eventListener != null) {
             player.addListener(eventListener);
+        }
+
+        if (videoListener!=null){
+            player.setVideoListener(videoListener);
         }
 
         if (mediaSource != null) {
@@ -169,5 +173,13 @@ public class PlayerCore {
 
     public void setEventListener(ExoPlayer.EventListener eventListener) {
         this.eventListener = eventListener;
+    }
+
+    public SimpleExoPlayer.VideoListener getVideoListener() {
+        return videoListener;
+    }
+
+    public void setVideoListener(SimpleExoPlayer.VideoListener videoListener) {
+        this.videoListener = videoListener;
     }
 }

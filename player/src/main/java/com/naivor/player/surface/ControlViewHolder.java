@@ -190,4 +190,16 @@ public class ControlViewHolder {
         }
     }
 
+    /**
+     * 重置全屏按钮
+     *
+     * @param res
+     */
+    public void showFullScreenButton(@DrawableRes int res) {
+        if (fullScreenButton != null) {
+            fullScreenButton.setImageResource(res);
+            fullScreenButton.setVisibility(View.VISIBLE);
+        }
+    }
+
 }

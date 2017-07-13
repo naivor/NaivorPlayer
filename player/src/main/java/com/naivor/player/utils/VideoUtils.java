@@ -100,7 +100,7 @@ public final class VideoUtils {
      * @param url
      * @param progress
      */
-    public static void saveProgress(Context context, String url, int progress) {
+    public static void saveProgress(Context context, String url, long progress) {
         if (!VideoPlayer.SAVE_PROGRESS) return;
 
         SPUtils.init(context, SP_VIDEO);
@@ -116,12 +116,12 @@ public final class VideoUtils {
      * @param url
      * @return
      */
-    public static int getSavedProgress(Context context, String url) {
+    public static long getSavedProgress(Context context, String url) {
         if (!VideoPlayer.SAVE_PROGRESS) return 0;
 
         SPUtils.init(context, SP_VIDEO);
 
-        return SPUtils.getInt(url, 0);
+        return SPUtils.getLong(url, 0);
     }
 
     /**

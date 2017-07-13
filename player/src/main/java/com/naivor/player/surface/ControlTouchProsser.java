@@ -33,9 +33,9 @@ import timber.log.Timber;
 
 public class ControlTouchProsser {
 
-    public static final int THRESHOLD = 80;
+    public static final int THRESHOLD = 20; //判断事件是进度，亮度，声音的最小范围
 
-    private Context context;
+    protected Context context;
 
     protected boolean mTouchingProgressBar;
     protected float mDownX;
@@ -47,6 +47,8 @@ public class ControlTouchProsser {
     //界面宽高
     protected int mScreenWidth;
     protected int mScreenHeight;
+
+    protected long time;
 
     public ControlTouchProsser(@NonNull Context context) {
         this.context = context;
@@ -71,6 +73,8 @@ public class ControlTouchProsser {
             case MotionEvent.ACTION_DOWN:
                 Timber.d(" actionDown");
 
+                time = System.currentTimeMillis();
+
                 mTouchingProgressBar = true;
 
                 mDownX = x;
@@ -89,17 +93,17 @@ public class ControlTouchProsser {
                     float absDeltaY = Math.abs(deltaY);
 
                     if (onControllViewListener.getScreenState() == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
+                        //判断改变是是位置，亮度还是声音
                         if (!mChangePosition && !mChangeVolume && !mChangeBrightness) {
-                            if (absDeltaX > THRESHOLD || absDeltaY > THRESHOLD) {
-                                scrubbing = true; //停止更新进度
+                            if (absDeltaX >= absDeltaY) { //横向滑动
                                 if (absDeltaX >= THRESHOLD) {
-                                    // 全屏模式下的CURRENT_STATE_ERROR状态下,不响应进度拖动事件.
-                                    // 否则会因为mediaplayer的状态非法导致App Crash
+                                    scrubbing = true; //停止更新进度
                                     if (onControllViewListener.getCurrentState() != VideoState.CURRENT_STATE_ERROR) {
-                                        mChangePosition = true;
+                                        mChangePosition = true;  //改变进度
                                     }
-                                } else {
-                                    //如果y轴滑动距离超过设置的处理范围，那么进行滑动事件处理
+                                }
+                            } else {  //纵向滑动
+                                if (absDeltaY >= THRESHOLD) {
                                     if (mDownX < mScreenWidth * 0.5f) {//左侧改变亮度
                                         mChangeBrightness = true;
                                     } else {//右侧改变声音
@@ -107,19 +111,22 @@ public class ControlTouchProsser {
                                     }
                                 }
                             }
+
+                        }
+
+                        if (mChangePosition) {
+                            onControllViewListener.changePlayingPosition(deltaX, mScreenWidth);
+                        }
+
+                        if (mChangeVolume) {  //改变音量
+                            onControllViewListener.changeVolume(-deltaY, mScreenHeight);
+                        }
+
+                        if (mChangeBrightness) {  //改变亮度
+                            onControllViewListener.changeBrightness(-deltaY, mScreenHeight);
                         }
                     }
-                    if (mChangePosition) {
-                        onControllViewListener.changePlayingPosition(deltaX, mScreenWidth);
-                    }
 
-                    if (mChangeVolume) {  //改变音量
-                        onControllViewListener.changeVolume(-deltaY, mScreenHeight);
-                    }
-
-                    if (mChangeBrightness) {  //改变亮度
-                        onControllViewListener.changeBrightness(-deltaY, mScreenHeight);
-                    }
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -133,9 +140,14 @@ public class ControlTouchProsser {
 
                 scrubbing = false; //继续更新进度
 
+                long between = System.currentTimeMillis() - time;
+                if (between < 100) {  //视为点击事件
+                    return false;
+                }
+
                 break;
         }
 
-        return false;
+        return true;
     }
 }

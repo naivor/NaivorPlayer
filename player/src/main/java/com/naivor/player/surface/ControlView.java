@@ -23,6 +23,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.SeekBar;
@@ -51,7 +52,7 @@ import timber.log.Timber;
 /**
  * 控制栏
  */
-public class ControlView extends FrameLayout implements PlayController, PositionController {
+public class ControlView extends FrameLayout implements PlayController, PositionController, View.OnTouchListener {
 
     public static final int DEFAULT_FAST_FORWARD_MS = 15000;
     public static final int DEFAULT_REWIND_MS = 5000;
@@ -99,6 +100,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
         }
     };
 
+    private ControlTouchProsser controlTouchProsser;
+
 
     public ControlView(Context context) {
         this(context, null);
@@ -127,6 +130,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
         viewHolder = new ControlViewHolder(this);
 
+        controlTouchProsser = new ControlTouchProsser(context);
+
         if (viewHolder.timeBar != null) {
             viewHolder.timeBar.setOnSeekBarChangeListener(componentListener);
         }
@@ -139,7 +144,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
             viewHolder.fullScreenButton.setOnClickListener(componentListener);
         }
 
-        setOnClickListener(componentListener);
+        setOnTouchListener(this);
     }
 
     /**
@@ -247,8 +252,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
         stop();
 
         if (viewHolder != null) {
-            viewHolder.playButton.setVisibility(VISIBLE);
-            updatePlayPauseButton(true);
+            viewHolder.showPlayButton(R.drawable.jc_click_error_selector);
         }
     }
 
@@ -260,10 +264,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
         stop();
 
-
-        if (viewHolder.playButton != null) {
-            viewHolder.playButton.setVisibility(VISIBLE);
-            updatePlayPauseButton();
+        if (viewHolder != null) {
+            viewHolder.showPlayButton(R.drawable.jc_click_play_selector);
         }
     }
 
@@ -300,6 +302,22 @@ public class ControlView extends FrameLayout implements PlayController, Position
     }
 
     /**
+     * 改变全屏按钮状态
+     *
+     * @param full
+     */
+    public void setFullBtnState(boolean full) {
+        if (viewHolder != null) {
+            if (full) {
+                viewHolder.showFullScreenButton(R.drawable.jc_shrink);
+            } else {
+                viewHolder.showFullScreenButton(R.drawable.jc_enlarge);
+
+            }
+        }
+    }
+
+    /**
      * 控制栏超时隐藏
      */
     private void hideAfterTimeout() {
@@ -330,11 +348,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 播放按钮状态更新
      */
-    protected void updatePlayPauseButton() {
-        updatePlayPauseButton(false);
-    }
-
-    private void updatePlayPauseButton(boolean isError) {
+    private void updatePlayPauseButton() {
 
         Timber.d("更新播放按钮");
 
@@ -343,9 +357,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
         }
 
         if (viewHolder.playButton != null) {
-            if (isError) {
-                viewHolder.showPlayButton(R.drawable.jc_click_error_selector);
-            } else if (player != null && player.getPlayWhenReady()
+
+            if (player != null && player.getPlayWhenReady()
                     && player.getPlaybackState() == ExoPlayer.STATE_READY) {
                 viewHolder.playButton.setImageResource(R.drawable.jc_click_pause_selector);
             } else {
@@ -798,6 +811,15 @@ public class ControlView extends FrameLayout implements PlayController, Position
         return true;
     }
 
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        boolean processTouchEvent = controlTouchProsser.processTouchEvent(motionEvent, onControllViewListener, scrubbing);
+        if (!processTouchEvent) {
+            show();
+        }
+        return processTouchEvent;
+    }
+
     /**
      * 监听器，监听播放事件，点击事件，拖动事件
      */
@@ -893,8 +915,6 @@ public class ControlView extends FrameLayout implements PlayController, Position
                     if (onControllViewListener != null) {
                         onControllViewListener.onFullScreenClick();
                     }
-                } else if (ControlView.this == view) {
-                    show();
                 }
             }
 
