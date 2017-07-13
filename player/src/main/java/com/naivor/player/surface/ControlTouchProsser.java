@@ -35,6 +35,12 @@ public class ControlTouchProsser {
 
     public static final int THRESHOLD = 20; //判断事件是进度，亮度，声音的最小范围
 
+    public static final int VOLUME_STEP = 1; // 音量增加的步长
+    public static final float BRIGHTNESS_STEP = 0.02f; // 亮度增加的步长
+    public static final int SEEK_STEP = 2; //进度增加的步长
+
+    public static final int VOLUME_MOVE_DAMP = 2; //音量增加的滑动伐值
+
     protected Context context;
 
     protected boolean mTouchingProgressBar;
@@ -44,9 +50,10 @@ public class ControlTouchProsser {
     protected boolean mChangePosition;
     protected boolean mChangeBrightness;
 
+    protected float mLastRawX; // 用来防止音量增加过快,因为音量最大值太小
+
     //界面宽高
     protected int mScreenWidth;
-    protected int mScreenHeight;
 
     protected long time;
 
@@ -54,7 +61,6 @@ public class ControlTouchProsser {
         this.context = context;
 
         mScreenWidth = context.getResources().getDisplayMetrics().widthPixels;
-        mScreenHeight = context.getResources().getDisplayMetrics().heightPixels;
     }
 
     /**
@@ -79,6 +85,7 @@ public class ControlTouchProsser {
 
                 mDownX = x;
                 mDownY = y;
+                mLastRawX = x;
                 mChangeVolume = false;
                 mChangePosition = false;
                 mChangeBrightness = false;
@@ -89,12 +96,13 @@ public class ControlTouchProsser {
                 if (onControllViewListener != null) {
                     float deltaX = x - mDownX;
                     float deltaY = y - mDownY;
-                    float absDeltaX = Math.abs(deltaX);
-                    float absDeltaY = Math.abs(deltaY);
 
                     if (onControllViewListener.getScreenState() == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
                         //判断改变是是位置，亮度还是声音
                         if (!mChangePosition && !mChangeVolume && !mChangeBrightness) {
+                            float absDeltaX = Math.abs(deltaX);
+                            float absDeltaY = Math.abs(deltaY);
+
                             if (absDeltaX >= absDeltaY) { //横向滑动
                                 if (absDeltaX >= THRESHOLD) {
                                     scrubbing = true; //停止更新进度
@@ -112,18 +120,24 @@ public class ControlTouchProsser {
                                 }
                             }
 
+                        } else { //一旦确定是位置，亮度，声音，就需要跟上个位置比较确定是加还是减
+                            mDownX = x;
+                            mDownY = y;
                         }
 
                         if (mChangePosition) {
-                            onControllViewListener.changePlayingPosition(deltaX, mScreenWidth);
+                            onControllViewListener.changePlayingPosition(deltaX, SEEK_STEP);
                         }
 
                         if (mChangeVolume) {  //改变音量
-                            onControllViewListener.changeVolume(-deltaY, mScreenHeight);
+                            if (Math.abs(x - mLastRawX) > VOLUME_MOVE_DAMP) {
+                                onControllViewListener.changeVolume(deltaY, VOLUME_STEP);
+                                mLastRawX = x;
+                            }
                         }
 
                         if (mChangeBrightness) {  //改变亮度
-                            onControllViewListener.changeBrightness(-deltaY, mScreenHeight);
+                            onControllViewListener.changeBrightness(deltaY, BRIGHTNESS_STEP);
                         }
                     }
 

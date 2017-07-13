@@ -59,22 +59,22 @@ public interface OnControllViewListener {
      * 改变音量
      *
      * @param offset
-     * @param total
+     * @param volumeStep
      */
-    void changeVolume(float offset, float total);
+    void changeVolume(float offset, int volumeStep);
 
     /**
      * 改变亮度
      *
      * @param offset
-     * @param total
+     * @param brightnessStep
      */
-    void changeBrightness(float offset, float total);
+    void changeBrightness(float offset, float brightnessStep);
 
     /**
      * 改变播放位置
      */
-    void changePlayingPosition(float offset, float total);
+    void changePlayingPosition(float offset, int seekStep);
 
     /**
      * 屏幕状态

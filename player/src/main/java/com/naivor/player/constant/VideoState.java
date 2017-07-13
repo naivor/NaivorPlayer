@@ -34,11 +34,11 @@ public final class VideoState {
 
     public static final int CURRENT_STATE_ORIGIN = 0;
     public static final int CURRENT_STATE_PREPARING = 1;
-    public static final int CURRENT_STATE_PLAYING = 2;
-    public static final int CURRENT_STATE_PLAYING_BUFFERING = 3;
-    public static final int CURRENT_STATE_PAUSE = 5;
-    public static final int CURRENT_STATE_COMPLETE = 6;
-    public static final int CURRENT_STATE_ERROR = 7;
+    public static final int CURRENT_STATE_PLAYING_BUFFERING = 2;
+    public static final int CURRENT_STATE_PLAYING = 3;
+    public static final int CURRENT_STATE_PAUSE = 4;
+    public static final int CURRENT_STATE_COMPLETE = 5;
+    public static final int CURRENT_STATE_ERROR = 6;
 
 
     @IntDef({CURRENT_STATE_ORIGIN, CURRENT_STATE_PREPARING, CURRENT_STATE_PLAYING,

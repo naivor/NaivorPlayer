@@ -22,6 +22,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -154,7 +155,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
     //视频拉伸模式
     @Getter
-    protected @AspectRatioFrameLayout.ResizeMode
+    protected
+    @AspectRatioFrameLayout.ResizeMode
     int resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT;
     @Getter
     @Setter
@@ -233,7 +235,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         controlView.setOnControllViewListener(this);
 
         mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-        mAudioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN); //请求音频焦点
 
         playerCore = PlayerCore.instance(getContext());
         playerCore.setEventListener(this);
@@ -241,6 +242,15 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         playerCore.setVideoListener(this);
 
         controlView.setPlayer(playerCore.getPlayer());
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        if (mAudioManager != null) {
+            mAudioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN); //请求音频焦点
+        }
     }
 
     @LayoutRes
@@ -365,7 +375,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
     @Override
     public void resume() {
-        controlView.resume();
+        if (isPause()) {
+            controlView.resume();
+        }
     }
 
     @Override
@@ -445,6 +457,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      * @param state
      */
     public void setVideoState(@VideoState.VideoStateValue int state) {
+        Timber.d("改变当前播放状态:%s", VideoState.getVideoStateName(state));
 
         switch (state) {
             case VideoState.CURRENT_STATE_ORIGIN:
@@ -478,16 +491,16 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      */
     public void setScreenState(@ScreenState.ScreenStateValue int state) {
         switch (state) {
-            case SCREEN_LAYOUT_NORMAL:
+            case ScreenState.SCREEN_LAYOUT_ORIGIN:
 
                 break;
-            case SCREEN_WINDOW_FULLSCREEN:
+            case ScreenState.SCREEN_WINDOW_FULLSCREEN:
 
                 break;
-            case SCREEN_WINDOW_TINY:
+            case ScreenState.SCREEN_WINDOW_TINY:
 
                 break;
-            case SCREEN_LAYOUT_LIST:
+            case ScreenState.SCREEN_LAYOUT_LIST:
 
                 break;
         }
@@ -573,6 +586,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         if (oldT != null) {
             vp.removeView(oldT);
         }
+
+
         showSupportActionBar(getContext(), true);
     }
 
@@ -586,8 +601,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      */
     public void autoFullscreen(float x) {
         if (videoState == VideoState.CURRENT_STATE_PLAYING
-                && screenState != SCREEN_WINDOW_FULLSCREEN
-                && screenState != SCREEN_WINDOW_TINY) {
+                && screenState != ScreenState.SCREEN_WINDOW_FULLSCREEN
+                && screenState != ScreenState.SCREEN_WINDOW_TINY) {
             if (x > 0) {
                 VideoUtils.getActivity(getContext()).setRequestedOrientation(
                         ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -605,7 +620,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     public void autoQuitFullscreen() {
         if ((System.currentTimeMillis() - lastAutoFullscreenTime) > 2000
                 && videoState == VideoState.CURRENT_STATE_PLAYING
-                && screenState == SCREEN_WINDOW_FULLSCREEN) {
+                && screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
             lastAutoFullscreenTime = System.currentTimeMillis();
             backPress();
         }
@@ -645,24 +660,30 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     public void startWindowFullscreen() {
         Timber.i("全屏播放");
 
-        showSupportActionBar(getContext(), false);
-
-        VideoUtils.getActivity(getContext()).setRequestedOrientation(FULLSCREEN_ORIENTATION);
-
         parent = (ViewGroup) getParent();
 
         if (parent != null) {
             parent.removeView(this);   //从当前父布局移除
+
+            pause();
+
+            VideoUtils.getActivity(getContext()).setRequestedOrientation(FULLSCREEN_ORIENTATION);
 
             ViewGroup vp = (ViewGroup) (VideoUtils.getActivity(getContext()))  //加入contentView
                     .findViewById(Window.ID_ANDROID_CONTENT);
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             vp.addView(this, lp);
+
+            showSupportActionBar(getContext(), false);
+            controlView.setFullBtnState(true);
+
+            setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN);
+
+            resume();
         }
 
-        setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN);
-        controlView.setFullBtnState(true);
+
     }
 
 
@@ -687,10 +708,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(400, 400);
             lp.gravity = Gravity.RIGHT | Gravity.BOTTOM;
             vp.addView(this, lp);
+
+
+            setScreenState(ScreenState.SCREEN_WINDOW_TINY);
         }
 
-
-        setScreenState(ScreenState.SCREEN_WINDOW_TINY);
     }
 
     /**
@@ -699,20 +721,27 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     public void backOriginWindow() {
         Timber.i("退出全屏和小窗");
 
-        VideoUtils.getActivity(getContext()).setRequestedOrientation(NORMAL_ORIENTATION);
-        showSupportActionBar(getContext(), true);
-
         ViewGroup currentVP = (ViewGroup) getParent();
 
         if (parent != null && currentVP != null && parent != currentVP) {
             currentVP.removeView(this);   //从当前父布局移除
 
-            parent.addView(this);
-        }
+            pause();
 
-        controlView.setFullBtnState(true);
-        setScreenState(ScreenState.SCREEN_LAYOUT_ORIGIN);
+            VideoUtils.getActivity(getContext()).setRequestedOrientation(NORMAL_ORIENTATION);
+
+            parent.addView(this);
+
+            showSupportActionBar(getContext(), true);
+            controlView.setFullBtnState(false);
+
+            setScreenState(ScreenState.SCREEN_LAYOUT_ORIGIN);
+            onTouchScreenEnd();
+
+            resume();
+        }
     }
+
 
     @Override
     public void onTimelineChanged(Timeline timeline, Object o) {
@@ -796,10 +825,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     }
 
     @Override
-    public void changeVolume(float offset, float total) {
-        Timber.d("changeVolume:%s,%s", offset, total);
+    public void changeVolume(float offset, int volumeStep) {
+        Timber.d("changeVolume:%s,%s", offset, volumeStep);
 
-        int volumePercent = caculateVolume(offset, total);
+        int volumePercent = caculateVolume(offset, volumeStep);
 
         showVolumeDialog(volumePercent);
     }
@@ -808,69 +837,91 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      * 计算声音百分比
      *
      * @param offset
-     * @param total
+     * @param volumeStep
      * @return
      */
-    protected int caculateVolume(float offset, float total) {
+    protected int caculateVolume(float offset, int volumeStep) {
         int mGestureDownVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        int deltaV = (int) (max * offset * 3 / total);
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mGestureDownVolume + deltaV, 0);
+
+        int stepValue = volumeStep * max / 100;
+        if (stepValue < 1) {  //为啥最大音量只有15？
+            stepValue = 1;
+        }
+
+        int deltaV;
+
+        if (offset < 0) {  //加声音
+            deltaV = mGestureDownVolume + stepValue;
+        } else {     //减声音
+            deltaV = mGestureDownVolume - stepValue;
+        }
+
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, deltaV, 0);
         //百分比
-        return (int) (mGestureDownVolume * 100 / max + offset * 3 * 100 / total);
+        return deltaV * 100 / max;
     }
 
     @Override
-    public void changeBrightness(float offset, float total) {
-        Timber.d("changeBrightness:%s,%s", offset, total);
+    public void changeBrightness(float offset, float brightnessStep) {
+        Timber.d("changeBrightness:%s,%s", offset, brightnessStep);
 
-        int brightnessPercent = caculateBrightness(offset, total);
+        int brightnessPercent = caculateBrightness(offset, brightnessStep);
 
         showBrightnessDialog(brightnessPercent);
     }
+
 
     /**
      * 计算亮度百分百
      *
      * @param offset
-     * @param total
+     * @param brightnessStep
      * @return
      */
-    protected int caculateBrightness(float offset, float total) {
+    protected int caculateBrightness(float offset, float brightnessStep) {
         float mGestureDownBrightness = 0;
 
         WindowManager.LayoutParams lp = VideoUtils.getActivity(getContext()).getWindow().getAttributes();
         if (lp.screenBrightness < 0) {
             try {
-                mGestureDownBrightness = Settings.System.getInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+                mGestureDownBrightness = Settings.System.getInt(getContext().getContentResolver(), Settings.System.SCREEN_BRIGHTNESS) / 255;
                 Timber.i("当前系统亮度：%s", mGestureDownBrightness);
             } catch (Settings.SettingNotFoundException e) {
                 e.printStackTrace();
             }
         } else {
-            mGestureDownBrightness = lp.screenBrightness * 255;
+            mGestureDownBrightness = lp.screenBrightness;
             Timber.i("当前页面亮度: ", mGestureDownBrightness);
         }
 
-        int deltaV = (int) (255 * offset * 3 / total);
-        WindowManager.LayoutParams params = VideoUtils.getActivity(getContext()).getWindow().getAttributes();
-        if (((mGestureDownBrightness + deltaV) / 255) >= 1) {//这和声音有区别，必须自己过滤一下负值
-            params.screenBrightness = 1;
-        } else if (((mGestureDownBrightness + deltaV) / 255) <= 0) {
-            params.screenBrightness = 0.01f;
-        } else {
-            params.screenBrightness = (mGestureDownBrightness + deltaV) / 255;
+        float deltaV;
+
+        if (offset < 0) {   //加亮度
+            deltaV = mGestureDownBrightness + brightnessStep;
+        } else {     // 减亮度
+            deltaV = mGestureDownBrightness - brightnessStep;
         }
+
+        WindowManager.LayoutParams params = VideoUtils.getActivity(getContext()).getWindow().getAttributes();
+        if (deltaV >= 1) {//这和声音有区别，必须自己过滤一下负值
+            deltaV = 1;
+        } else if (deltaV <= 0) {
+            deltaV = 0.01f;
+        }
+
+        params.screenBrightness = deltaV;
+
         VideoUtils.getActivity(getContext()).getWindow().setAttributes(params);
         //亮度百分比
-        return (int) (mGestureDownBrightness * 100 / 255 + offset * 3 * 100 / total);
+        return (int) (deltaV * 100);
     }
 
     @Override
-    public void changePlayingPosition(float offset, float total) {
-        Timber.d("changePlayingPosition:%s,%s", offset, total);
+    public void changePlayingPosition(float offset, int seekStep) {
+        Timber.d("changePlayingPosition:%s,%s", offset, seekStep);
 
-        long position = caculatePlayPosition(offset, total);
+        long position = caculatePlayPosition(offset, seekStep);
 
         showProgressDialog(offset, position, getTotalDuration());
     }
@@ -879,16 +930,26 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      * 计算播放位置
      *
      * @param offset
-     * @param total
+     * @param seekStep
      * @return
      */
-    protected long caculatePlayPosition(float offset, float total) {
+    protected long caculatePlayPosition(float offset, int seekStep) {
         long mSeekTimePosition;
         long totalTimeDuration = getTotalDuration();
-        mSeekTimePosition = (int) (getCurrentDuration() + offset * totalTimeDuration / total);
+
+        if (offset > 0) {       //加进度
+            mSeekTimePosition = getCurrentDuration() + seekStep * totalTimeDuration / 100;
+        } else {       //减进度
+            mSeekTimePosition = getCurrentDuration() - seekStep * totalTimeDuration / 100;
+        }
+
         if (mSeekTimePosition > totalTimeDuration) {
             mSeekTimePosition = totalTimeDuration;
+        } else if (mSeekTimePosition < 0) {
+            mSeekTimePosition = 0;
         }
+
+        seekTo(mSeekTimePosition);
 
         return mSeekTimePosition;
     }
@@ -943,28 +1004,24 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
         Timber.d("显示标题栏：%s", show);
 
-            ActionBar ab = VideoUtils.getActivity(context).getSupportActionBar();
+        ActionBar ab = VideoUtils.getActivity(context).getSupportActionBar();
 
-            if (ab != null) {
+        if (ab != null) {
 
-                Timber.i("ActionBar 存在，%s", ab.getClass().getCanonicalName());
+            Timber.i("ActionBar 存在，%s", ab.getClass().getCanonicalName());
 
-                if (show) {
-                    ab.show();
-                } else {
-                    ab.hide();
-                }
+            if (show) {
+                ab.show();
 
-                if (TOOL_BAR_EXIST) {
-                    if (show) {
-                        VideoUtils.getActivity(context).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                    } else {
-                        VideoUtils.getActivity(context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-                    }
-                }
+                VideoUtils.getActivity(context).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            } else {
+                ab.hide();
 
+                VideoUtils.getActivity(context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN);
             }
+
+        }
 
     }
 
@@ -1000,7 +1057,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        if (screenState == SCREEN_WINDOW_FULLSCREEN) {
+                        if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
                             dialog.dismiss();
                             clearFullscreenLayout();
                         }
@@ -1010,7 +1067,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
                     @Override
                     public void onCancel(DialogInterface dialog) {
                         dialog.dismiss();
-                        if (screenState == SCREEN_WINDOW_FULLSCREEN) {
+                        if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
                             dialog.dismiss();
                             clearFullscreenLayout();
                         }

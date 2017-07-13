@@ -307,6 +307,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
      * @param full
      */
     public void setFullBtnState(boolean full) {
+        Timber.d("改变全屏按钮状态，全屏：%s",full);
+
         if (viewHolder != null) {
             if (full) {
                 viewHolder.showFullScreenButton(R.drawable.jc_shrink);
@@ -886,20 +888,26 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
         @Override
         public void onClick(View view) {
+
             boolean isPause = false;
             boolean isComplete = false;
+            boolean isOrigin = false;
 
             if (onControllViewListener != null) {
                 onControllViewListener.onclick(view);
 
                 int state = onControllViewListener.getCurrentState();
+
                 isPause = state == VideoState.CURRENT_STATE_PAUSE;
                 isComplete = state == VideoState.CURRENT_STATE_COMPLETE;
+                isOrigin = state == VideoState.CURRENT_STATE_ORIGIN;
             }
 
             if (player != null) {
                 if (viewHolder.playButton == view) {
-                    if (isComplete) {
+                    if (isOrigin) {
+                        start();
+                    } else if (isComplete) {
                         rePlay();
                     } else if (player.getPlayWhenReady()) {
                         pause();

@@ -29,9 +29,30 @@ public class MainActivity extends AppCompatActivity {
         Timber.d("测试地址：%s", testUrl);
         videoPlayer.setUp(testUrl, VideoPlayer.SCREEN_LAYOUT_NORMAL, "测试测试");
 
-        videoPlayer.start();
+//        videoPlayer.start();
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        videoPlayer.resume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        videoPlayer.pause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        videoPlayer.stop();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
