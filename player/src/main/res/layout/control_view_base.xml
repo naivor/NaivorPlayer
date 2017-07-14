@@ -17,22 +17,74 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:id="@+id/ll_top"
+    <FrameLayout
+        android:id="@+id/fl_top"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="@drawable/jc_title_bg"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_height="48dp">
 
-    </LinearLayout>
+        <LinearLayout
+            android:id="@+id/ll_title"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/controllBarBg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="visible">
+
+            <Button
+                android:id="@+id/iv_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@drawable/ic_back_selector"
+                android:scaleType="centerInside" />
+
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="视频标题"
+                android:textColor="@android:color/white"
+                android:textSize="20sp" />
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/rl_tiny"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/iv_tiny_exit"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/ic_tiny_exit_selector"
+                android:paddingLeft="14dp"
+                android:paddingRight="18dp"
+                android:scaleType="centerInside" />
+
+            <Button
+                android:id="@+id/iv_tiny_close"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentRight="true"
+                android:background="@drawable/ic_tiny_close_selector"
+                android:paddingLeft="14dp"
+                android:paddingRight="18dp"
+                android:scaleType="centerInside" />
+
+        </RelativeLayout>
+    </FrameLayout>
+
 
     <ProgressBar
         android:id="@+id/pb_loading"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_gravity="center"
-        android:indeterminateDrawable="@drawable/jc_loading"
+        android:indeterminateDrawable="@drawable/ic_loading"
         android:visibility="invisible" />
 
     <ImageView
@@ -40,14 +92,14 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_gravity="center"
-        android:src="@drawable/jc_click_play_selector" />
+        android:src="@drawable/ic_play_selector" />
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/ll_bottom"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="48dp"
         android:layout_gravity="bottom"
-        android:background="#99000000"
+        android:background="@color/controllBarBg"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -71,8 +123,8 @@
             android:minHeight="4dp"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
-            android:progressDrawable="@drawable/jc_bottom_seek_progress"
-            android:thumb="@drawable/jc_bottom_seek_thumb" />
+            android:progressDrawable="@drawable/bg_bottom_seek_progress"
+            android:thumb="@drawable/ic_bottom_seek_thumb" />
 
         <TextView
             android:id="@+id/tv_total"
@@ -82,13 +134,13 @@
             android:text="00:00"
             android:textColor="#ffffff" />
 
-        <ImageView
+        <Button
             android:id="@+id/iv_fullscreen"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:paddingRight="16dp"
-            android:scaleType="center"
-            android:src="@drawable/jc_enlarge" />
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginRight="16dp"
+            android:background="@drawable/ic_fullscreen_selector"
+            android:scaleType="center" />
     </LinearLayout>
 
 

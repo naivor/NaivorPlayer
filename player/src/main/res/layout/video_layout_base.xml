@@ -12,6 +12,15 @@
 
     </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
 
+    <ProgressBar
+        android:id="@+id/bottom_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="1.5dp"
+        android:layout_gravity="bottom"
+        android:max="100"
+        android:progressDrawable="@drawable/bg_bottom_progress" />
+
     <com.naivor.player.surface.ControlView
         android:id="@+id/cv_controll"
         android:layout_width="match_parent"

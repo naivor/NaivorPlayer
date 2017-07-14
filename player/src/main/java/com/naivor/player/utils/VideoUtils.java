@@ -17,16 +17,23 @@
 package com.naivor.player.utils;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.provider.Settings;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ContextThemeWrapper;
 import android.text.TextUtils;
+import android.view.WindowManager;
 
 import com.naivor.player.VideoPlayer;
 
 import java.util.Formatter;
 import java.util.Locale;
+
+import lombok.NonNull;
+import timber.log.Timber;
 
 /**
  * 视频工具类
@@ -139,5 +146,135 @@ public final class VideoUtils {
         } else {
             SPUtils.save(url, 0);
         }
+    }
+
+    /**
+     * 改变亮度并计算亮度百分比
+     *
+     * @param offset
+     * @param brightnessStep
+     * @return
+     */
+    public static int caculateBrightness(@NonNull Context context, float offset, float brightnessStep) {
+        float mGestureDownBrightness = 0;
+
+        WindowManager.LayoutParams lp = VideoUtils.getActivity(context).getWindow().getAttributes();
+        if (lp.screenBrightness < 0) {
+            try {
+                mGestureDownBrightness = Settings.System.getInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS) / 255;
+                Timber.i("当前系统亮度：%s", mGestureDownBrightness);
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+            }
+        } else {
+            mGestureDownBrightness = lp.screenBrightness;
+            Timber.i("当前页面亮度: ", mGestureDownBrightness);
+        }
+
+        float deltaV;
+
+        if (offset < 0) {   //加亮度
+            deltaV = mGestureDownBrightness + brightnessStep;
+        } else {     // 减亮度
+            deltaV = mGestureDownBrightness - brightnessStep;
+        }
+
+        WindowManager.LayoutParams params = VideoUtils.getActivity(context).getWindow().getAttributes();
+        if (deltaV >= 1) {//这和声音有区别，必须自己过滤一下负值
+            deltaV = 1;
+        } else if (deltaV <= 0) {
+            deltaV = 0.01f;
+        }
+
+        params.screenBrightness = deltaV;
+
+        VideoUtils.getActivity(context).getWindow().setAttributes(params);
+        //亮度百分比
+        return (int) (deltaV * 100);
+    }
+
+    /**
+     * 计算播放位置
+     *
+     * @param offset
+     * @param seekStep
+     * @return
+     */
+    public static long caculatePlayPosition(float offset, int seekStep, long currentDuration, long totalDuration) {
+        long mSeekTimePosition;
+
+        if (offset > 0) {       //加进度
+            mSeekTimePosition = currentDuration + seekStep * totalDuration / 100;
+        } else {       //减进度
+            mSeekTimePosition = currentDuration - seekStep * totalDuration / 100;
+        }
+
+        if (mSeekTimePosition > totalDuration) {
+            mSeekTimePosition = totalDuration;
+        } else if (mSeekTimePosition < 0) {
+            mSeekTimePosition = 0;
+        }
+
+        return mSeekTimePosition;
+    }
+
+    /**
+     * 计算声音百分比
+     *
+     * @param offset
+     * @param volumeStep
+     * @return
+     */
+    public static int caculateVolume(@NonNull AudioManager mAudioManager, float offset, int volumeStep) {
+        int mGestureDownVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+
+        int stepValue = volumeStep * max / 100;
+        if (stepValue < 1) {  //为啥最大音量只有15？
+            stepValue = 1;
+        }
+
+        int deltaV;
+
+        if (offset < 0) {  //加声音
+            deltaV = mGestureDownVolume + stepValue;
+        } else {     //减声音
+            deltaV = mGestureDownVolume - stepValue;
+        }
+
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, deltaV, 0);
+        //百分比
+        return deltaV * 100 / max;
+    }
+
+    /**
+     * 显示或隐藏 ActionBar
+     *
+     * @param context
+     * @param show
+     */
+    public static void showSupportActionBar(Context context, boolean show) {
+
+        Timber.d("显示标题栏：%s", show);
+
+        ActionBar ab = VideoUtils.getActivity(context).getSupportActionBar();
+
+        if (ab != null) {
+
+            Timber.i("ActionBar 存在，%s", ab.getClass().getCanonicalName());
+
+            if (show) {
+                ab.show();
+
+                VideoUtils.getActivity(context).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            } else {
+                ab.hide();
+
+                VideoUtils.getActivity(context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            }
+
+        }
+
     }
 }

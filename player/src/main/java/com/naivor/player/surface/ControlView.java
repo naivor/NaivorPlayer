@@ -38,6 +38,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
 import com.naivor.player.R;
+import com.naivor.player.constant.ScreenState;
 import com.naivor.player.constant.VideoState;
 import com.naivor.player.controll.PlayController;
 import com.naivor.player.controll.PositionController;
@@ -46,6 +47,7 @@ import java.util.Arrays;
 import java.util.Formatter;
 import java.util.Locale;
 
+import lombok.NonNull;
 import timber.log.Timber;
 
 
@@ -100,7 +102,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
         }
     };
 
-    private ControlTouchProsser controlTouchProsser;
+    private ControlTouchProcessor controlTouchProcessor;
 
 
     public ControlView(Context context) {
@@ -130,18 +132,30 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
         viewHolder = new ControlViewHolder(this);
 
-        controlTouchProsser = new ControlTouchProsser(context);
+        controlTouchProcessor = new ControlTouchProcessor(context);
 
         if (viewHolder.timeBar != null) {
             viewHolder.timeBar.setOnSeekBarChangeListener(componentListener);
         }
 
-        if (viewHolder.playButton != null) {
-            viewHolder.playButton.setOnClickListener(componentListener);
+        if (viewHolder.playBtn != null) {
+            viewHolder.playBtn.setOnClickListener(componentListener);
         }
 
-        if (viewHolder.fullScreenButton != null) {
-            viewHolder.fullScreenButton.setOnClickListener(componentListener);
+        if (viewHolder.fullScreenBtn != null) {
+            viewHolder.fullScreenBtn.setOnClickListener(componentListener);
+        }
+
+        if (viewHolder.backBtn != null) {
+            viewHolder.backBtn.setOnClickListener(componentListener);
+        }
+
+        if (viewHolder.tinyExitBtn != null) {
+            viewHolder.tinyExitBtn.setOnClickListener(componentListener);
+        }
+
+        if (viewHolder.tinyCloseBtn != null) {
+            viewHolder.tinyCloseBtn.setOnClickListener(componentListener);
         }
 
         setOnTouchListener(this);
@@ -233,6 +247,17 @@ public class ControlView extends FrameLayout implements PlayController, Position
     }
 
     /**
+     * 设置播放视频的标题
+     *
+     * @param videoTitle
+     */
+    public void setVideoTitle(@NonNull String videoTitle) {
+        if (viewHolder.videoTitle != null) {
+            viewHolder.videoTitle.setText(videoTitle);
+        }
+    }
+
+    /**
      * 显示缓冲
      *
      * @param isThumb
@@ -252,7 +277,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
         stop();
 
         if (viewHolder != null) {
-            viewHolder.showPlayButton(R.drawable.jc_click_error_selector);
+            viewHolder.showPlayButton(R.drawable.ic_error_selector);
         }
     }
 
@@ -265,7 +290,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
         stop();
 
         if (viewHolder != null) {
-            viewHolder.showPlayButton(R.drawable.jc_click_play_selector);
+            viewHolder.showPlayButton(R.drawable.ic_play_selector);
         }
     }
 
@@ -304,18 +329,13 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 改变全屏按钮状态
      *
-     * @param full
+     * @param state
      */
-    public void setFullBtnState(boolean full) {
-        Timber.d("改变全屏按钮状态，全屏：%s",full);
+    public void setFullBtnState(@ScreenState.ScreenStateValue int state) {
+        Timber.d("改变全屏按钮状态，全屏：%s", state);
 
         if (viewHolder != null) {
-            if (full) {
-                viewHolder.showFullScreenButton(R.drawable.jc_shrink);
-            } else {
-                viewHolder.showFullScreenButton(R.drawable.jc_enlarge);
-
-            }
+            viewHolder.showFullScreenButton(state);
         }
     }
 
@@ -358,13 +378,13 @@ public class ControlView extends FrameLayout implements PlayController, Position
             return;
         }
 
-        if (viewHolder.playButton != null) {
+        if (viewHolder.playBtn != null) {
 
             if (player != null && player.getPlayWhenReady()
                     && player.getPlaybackState() == ExoPlayer.STATE_READY) {
-                viewHolder.playButton.setImageResource(R.drawable.jc_click_pause_selector);
+                viewHolder.playBtn.setImageResource(R.drawable.ic_pause_selector);
             } else {
-                viewHolder.playButton.setImageResource(R.drawable.jc_click_play_selector);
+                viewHolder.playBtn.setImageResource(R.drawable.ic_play_selector);
             }
         }
 
@@ -815,7 +835,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
-        boolean processTouchEvent = controlTouchProsser.processTouchEvent(motionEvent, onControllViewListener, scrubbing);
+        boolean processTouchEvent = controlTouchProcessor.processTouchEvent(motionEvent, onControllViewListener, scrubbing);
         if (!processTouchEvent) {
             show();
         }
@@ -904,7 +924,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
             }
 
             if (player != null) {
-                if (viewHolder.playButton == view) {
+                if (viewHolder.playBtn == view) {
                     if (isOrigin) {
                         start();
                     } else if (isComplete) {
@@ -919,7 +939,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
                         resume();
                     }
 
-                } else if (viewHolder.fullScreenButton == view) {
+                } else if (viewHolder.fullScreenBtn == view) {
                     if (onControllViewListener != null) {
                         onControllViewListener.onFullScreenClick();
                     }

@@ -56,9 +56,10 @@ public class PlayerCore {
     private LoadControl loadControl;  //加载状态监听
 
     private ExoPlayer.EventListener eventListener;  //事件监听
-    private SimpleExoPlayer.VideoListener  videoListener; //事件监听
+    private SimpleExoPlayer.VideoListener videoListener; //事件监听
 
     private static PlayerCore playerCore;
+
     /**
      * 单例
      *
@@ -80,6 +81,15 @@ public class PlayerCore {
     private PlayerCore(@NonNull Context context) {
         this.context = context;
 
+        createPlayer(context);
+    }
+
+    /**
+     * 创建播放器
+     *
+     * @param context
+     */
+    private void createPlayer(@NonNull Context context) {
         renderersFactory = new DefaultRenderersFactory(context);
         trackSelector = new DefaultTrackSelector();
 
@@ -93,6 +103,10 @@ public class PlayerCore {
      * 准备视频
      */
     public void prepare() {
+        if (player == null) {
+            createPlayer(context);
+        }
+
         if (surfaceView != null) {
             if (surfaceView instanceof TextureView) {
                 player.setVideoTextureView((TextureView) surfaceView);
@@ -107,7 +121,7 @@ public class PlayerCore {
             player.addListener(eventListener);
         }
 
-        if (videoListener!=null){
+        if (videoListener != null) {
             player.setVideoListener(videoListener);
         }
 
@@ -118,6 +132,19 @@ public class PlayerCore {
         }
     }
 
+
+    /**
+     * 释放资源
+     */
+    public void release() {
+        player.release();
+
+        player = null;
+        renderersFactory = null;
+        trackSelector = null;
+        loadControl = null;
+
+    }
 
     public RenderersFactory getRenderersFactory() {
         return renderersFactory;

@@ -2,27 +2,29 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/jc_dialog_progress_bg"
+    android:background="@drawable/bg_dialog"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="155dp"
         android:layout_height="120dp"
+        android:gravity="center"
         android:orientation="vertical">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/iv_brightness"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="20dp"
-            android:src="@drawable/jc_brightness_video" />
+            android:background="@drawable/ic_brightness_low" />
 
         <TextView
             android:id="@+id/tv_brightness"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="5dp"
             android:gravity="center_horizontal"
             android:textColor="#ffffffff"
             android:textSize="16sp" />
@@ -38,6 +40,6 @@
             android:layout_marginRight="24dp"
             android:layout_marginTop="8dp"
             android:max="100"
-            android:progressDrawable="@drawable/jc_dialog_progress" />
+            android:progressDrawable="@drawable/bg_dialog_progress" />
     </LinearLayout>
 </LinearLayout>

@@ -31,7 +31,7 @@ import timber.log.Timber;
  * Created by tianlai on 17-7-12.
  */
 
-public class ControlTouchProsser {
+public class ControlTouchProcessor {
 
     public static final int THRESHOLD = 20; //判断事件是进度，亮度，声音的最小范围
 
@@ -39,25 +39,24 @@ public class ControlTouchProsser {
     public static final float BRIGHTNESS_STEP = 0.02f; // 亮度增加的步长
     public static final int SEEK_STEP = 2; //进度增加的步长
 
-    public static final int VOLUME_MOVE_DAMP = 2; //音量增加的滑动伐值
+    public static final int MOVE_DAMP = 10; //滑动伐值
 
     protected Context context;
 
-    protected boolean mTouchingProgressBar;
     protected float mDownX;
     protected float mDownY;
     protected boolean mChangeVolume;
     protected boolean mChangePosition;
     protected boolean mChangeBrightness;
 
-    protected float mLastRawX; // 用来防止音量增加过快,因为音量最大值太小
+    protected boolean isActionProcessing; // 是否有操作正在处理
 
     //界面宽高
     protected int mScreenWidth;
 
     protected long time;
 
-    public ControlTouchProsser(@NonNull Context context) {
+    public ControlTouchProcessor(@NonNull Context context) {
         this.context = context;
 
         mScreenWidth = context.getResources().getDisplayMetrics().widthPixels;
@@ -81,72 +80,72 @@ public class ControlTouchProsser {
 
                 time = System.currentTimeMillis();
 
-                mTouchingProgressBar = true;
-
                 mDownX = x;
                 mDownY = y;
-                mLastRawX = x;
+
+                isActionProcessing = false;
                 mChangeVolume = false;
                 mChangePosition = false;
                 mChangeBrightness = false;
+
                 break;
             case MotionEvent.ACTION_MOVE:
                 Timber.d(" actionMove");
 
                 if (onControllViewListener != null) {
-                    float deltaX = x - mDownX;
-                    float deltaY = y - mDownY;
 
                     if (onControllViewListener.getScreenState() == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
-                        //判断改变是是位置，亮度还是声音
-                        if (!mChangePosition && !mChangeVolume && !mChangeBrightness) {
-                            float absDeltaX = Math.abs(deltaX);
-                            float absDeltaY = Math.abs(deltaY);
+                        float deltaX = x - mDownX;
+                        float deltaY = y - mDownY;
 
-                            if (absDeltaX >= absDeltaY) { //横向滑动
+                        float absDeltaX = Math.abs(deltaX);
+                        float absDeltaY = Math.abs(deltaY);
+
+                        if (!isActionProcessing) {  //判断应该处理进度，音量，亮度中的哪个事件
+                            if (absDeltaX >= absDeltaY) {         //横向滑动
                                 if (absDeltaX >= THRESHOLD) {
-                                    scrubbing = true; //停止更新进度
+                                    scrubbing = true;    //停止更新进度
                                     if (onControllViewListener.getCurrentState() != VideoState.CURRENT_STATE_ERROR) {
-                                        mChangePosition = true;  //改变进度
+                                        mChangePosition = true;   //改变进度
+                                        isActionProcessing = true;
                                     }
                                 }
-                            } else {  //纵向滑动
+                            } else {     //纵向滑动
                                 if (absDeltaY >= THRESHOLD) {
-                                    if (mDownX < mScreenWidth * 0.5f) {//左侧改变亮度
+                                    if (mDownX < mScreenWidth * 0.5f) {       //左侧改变亮度
                                         mChangeBrightness = true;
-                                    } else {//右侧改变声音
+                                    } else {        //右侧改变声音
                                         mChangeVolume = true;
                                     }
+                                    isActionProcessing = true;
                                 }
                             }
-
-                        } else { //一旦确定是位置，亮度，声音，就需要跟上个位置比较确定是加还是减
-                            mDownX = x;
-                            mDownY = y;
-                        }
-
-                        if (mChangePosition) {
-                            onControllViewListener.changePlayingPosition(deltaX, SEEK_STEP);
-                        }
-
-                        if (mChangeVolume) {  //改变音量
-                            if (Math.abs(x - mLastRawX) > VOLUME_MOVE_DAMP) {
-                                onControllViewListener.changeVolume(deltaY, VOLUME_STEP);
-                                mLastRawX = x;
+                        } else {   //事件处理
+                            if (mChangePosition) {  //进度
+                                if (absDeltaX >= MOVE_DAMP) {
+                                    onControllViewListener.changePlayingPosition(deltaX, SEEK_STEP);
+                                    mDownX = x;
+                                }
+                            } else if (mChangeBrightness) {  //亮度
+                                if (absDeltaY >= MOVE_DAMP) {
+                                    onControllViewListener.changeBrightness(deltaY, BRIGHTNESS_STEP);
+                                    mDownY = y;
+                                }
+                            } else if (mChangeVolume) {  //声音
+                                if (absDeltaY >= MOVE_DAMP) {
+                                    onControllViewListener.changeVolume(deltaY, VOLUME_STEP);
+                                    mDownY = y;
+                                }
                             }
                         }
 
-                        if (mChangeBrightness) {  //改变亮度
-                            onControllViewListener.changeBrightness(deltaY, BRIGHTNESS_STEP);
-                        }
+
                     }
 
                 }
                 break;
             case MotionEvent.ACTION_UP:
                 Timber.d(" actionUp ");
-
-                mTouchingProgressBar = false;
 
                 if (onControllViewListener != null) {
                     onControllViewListener.onTouchScreenEnd();

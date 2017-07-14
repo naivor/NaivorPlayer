@@ -18,6 +18,7 @@ package com.naivor.player.controll;
 
 import com.naivor.player.constant.OrientationState;
 import com.naivor.player.constant.ScreenState;
+import com.naivor.player.constant.VideoState;
 
 /**
  * 视频控制器
@@ -65,4 +66,76 @@ public interface VideoController extends PositionController, PlayController {
      * @return
      */
     boolean isBuffering();
+
+    /**
+     * @param url
+     * @param screen
+     * @param objects
+     * @return
+     */
+    boolean setUp(String url, @ScreenState.ScreenStateValue int screen, Object... objects);
+
+    /**
+     * 直接全屏播放
+     *
+     * @param url
+     * @param objects
+     */
+    void startFullscreen(String url, Object... objects);
+
+    /**
+     * 准备播放器，初始化播放源
+     */
+    void prepareSource();
+
+    /**
+     * 准备完成
+     */
+    void onPrepared();
+
+    /**
+     * 改变当前播放状态
+     *
+     * @param state
+     */
+    void setVideoState(@VideoState.VideoStateValue int state);
+
+    /**
+     * 改变屏幕状态
+     *
+     * @param state
+     */
+    void setScreenState(@ScreenState.ScreenStateValue int state);
+
+    /**
+     * 全屏播放
+     */
+    void startWindowFullscreen();
+
+    /**
+     * 小窗播放
+     */
+    void startWindowTiny();
+
+    /**
+     * 退出全屏和小窗
+     */
+    boolean backOriginWindow();
+
+    /**
+     * 屏幕状态
+     *
+     * @return
+     */
+    @ScreenState.ScreenStateValue
+    int getScreenState();
+
+    /**
+     * 播放状态
+     *
+     * @return
+     */
+    @VideoState.VideoStateValue
+    int getCurrentState();
 }
+
