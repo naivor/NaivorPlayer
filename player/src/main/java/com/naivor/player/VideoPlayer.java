@@ -29,6 +29,7 @@ import android.net.Uri;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -83,6 +84,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         VideoController, ExoPlayer.EventListener, SimpleExoPlayer.VideoListener, LoadControl {
 
     public static final int FULL_SCREEN_NORMAL_DELAY = 300;
+    //小窗的宽高 16:9
+    public static final int WIDTH_TINY_WINDOW = 224;
+    public static final int HEIGHT_TINY_WINDOW = 126;
 
     @Getter
     protected AspectRatioFrameLayout contentFrame;
@@ -91,6 +95,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     //用于全屏，小窗记录原来父控件
     protected ViewGroup parent;
     protected ViewGroup.LayoutParams parentLayoutParams;
+    protected int indexInParent;
 
     //控制界面的控件
     protected ControlView controlView;
@@ -107,12 +112,12 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     protected long lastAutoFullscreenTime = 0;
     protected long lastQuiteFullScreenTime = 0;
 
-    protected
+    @Getter
     @VideoState.VideoStateValue
-    int videoState = VideoState.CURRENT_STATE_ORIGIN;
-    protected
+    protected int videoState = VideoState.CURRENT_STATE_ORIGIN;
+
     @ScreenState.ScreenStateValue
-    int screenState = ScreenState.SCREEN_LAYOUT_ORIGIN;
+    protected int screenState = ScreenState.SCREEN_LAYOUT_ORIGIN;
 
     protected String url = "";
     protected Object[] objects = null;
@@ -194,30 +199,33 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      * @param context
      */
     protected void init(Context context) {
-        Utils.init(context);
 
         View.inflate(context, getLayoutId(), this);
         //背景
         setBackgroundColor(frameBackground);
 
-        contentFrame = findViewById(R.id.surface_container);
-        bottomProgressBar = findViewById(R.id.bottom_progress);
-        controlView = findViewById(R.id.cv_controll);
+        if (!isInEditMode()) {
+            Utils.init(context);
 
-        contentFrame.setResizeMode(resizeMode);
+            contentFrame = findViewById(R.id.surface_container);
+            bottomProgressBar = findViewById(R.id.bottom_progress);
+            controlView = findViewById(R.id.cv_controll);
 
-        mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-        mAudioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN); //请求音频焦点
+            contentFrame.setResizeMode(resizeMode);
 
-        playerCore = PlayerCore.instance(getContext());
-        playerCore.setEventListener(this);
-        playerCore.setLoadControl(this);
-        playerCore.setVideoListener(this);
+            mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+            mAudioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN); //请求音频焦点
 
-        dialogHolder = new DialogHolder(getContext(), this);
+            playerCore = PlayerCore.instance(getContext());
+            playerCore.setEventListener(this);
+            playerCore.setLoadControl(this);
+            playerCore.setVideoListener(this);
 
-        controlView.setPlayer(playerCore.getPlayer());
-        controlView.setOnControllViewListener(this);
+            dialogHolder = new DialogHolder(getContext(), this);
+
+            controlView.setPlayer(playerCore.getPlayer());
+            controlView.setOnControllViewListener(this);
+        }
     }
 
 
@@ -668,6 +676,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
                 if (viewParent != vp) {
 
                     parent = (ViewGroup) viewParent;
+                    indexInParent = parent.indexOfChild(this);
                     parentLayoutParams = getLayoutParams();
                     parent.removeView(this);   //从当前父布局移除
 
@@ -715,13 +724,18 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
                 if (viewParent != vp) {
                     parent = (ViewGroup) viewParent;
+                    indexInParent = parent.indexOfChild(this);
                     parentLayoutParams = getLayoutParams();
                     parent.removeView(this);   //从当前父布局移除
 
                     pause();
 
-                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(400, 400);
+                    int widthTinyWindow = VideoUtils.dp2px(WIDTH_TINY_WINDOW);
+                    int heightTinyWindow = VideoUtils.dp2px(HEIGHT_TINY_WINDOW);
+                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(widthTinyWindow, heightTinyWindow);
                     lp.gravity = Gravity.RIGHT | Gravity.BOTTOM;
+                    lp.bottomMargin = VideoUtils.dp2px(20);
+                    lp.rightMargin = VideoUtils.dp2px(5);
                     vp.addView(this, lp);
 
 
@@ -739,6 +753,12 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      */
     @Override
     public boolean backOriginWindow() {
+        return backOriginWindow(true);
+    }
+    /**
+     * 退出全屏和小窗
+     */
+    public boolean backOriginWindow(boolean continuePlay) {
         Timber.i("退出全屏和小窗");
 
         if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN || screenState == ScreenState.SCREEN_WINDOW_TINY) {
@@ -750,7 +770,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
                 pause();
 
-                parent.addView(this, parentLayoutParams);
+                parent.addView(this, indexInParent, parentLayoutParams);
 
                 VideoUtils.getActivity(getContext()).setRequestedOrientation(normalOrientation);
                 VideoUtils.showSupportActionBar(getContext(), true);
@@ -758,10 +778,14 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
                 setScreenState(ScreenState.SCREEN_LAYOUT_ORIGIN);
                 onTouchScreenEnd();
 
-                resume();
+                if (continuePlay) {
+                    resume();
+                }
 
                 bottomProgressBar.setVisibility(GONE);
+
                 parent = null;
+                indexInParent = 0;
                 parentLayoutParams = null;
 
                 return true;
@@ -836,10 +860,15 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
             playEventListener.onControllViewClick(view);
         }
 
-        if (view.getId() == R.id.iv_back) {
+        int id = view.getId();
+        if (id == R.id.iv_back) {
             if (!backPress()) {
                 VideoUtils.getActivity(getContext()).onBackPressed();
             }
+        } else if (id == R.id.iv_tiny_exit) {
+            backOriginWindow();
+        } else if (id == R.id.iv_tiny_close) {
+            backOriginWindow(false);
         }
     }
 

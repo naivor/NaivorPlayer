@@ -49,6 +49,9 @@ dependencies {
 
     compile rootProject.ext.dependencies.timber
 
+    compile rootProject.ext.dependencies.butterknife
+    annotationProcessor rootProject.ext.dependencies.butterknifeCompiler
+
     provided rootProject.ext.dependencies.lombok
     provided rootProject.ext.dependencies.annotation
 

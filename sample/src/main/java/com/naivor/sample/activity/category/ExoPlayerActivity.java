@@ -14,13 +14,15 @@
  *  limitations under the License.
  */
 
-package com.naivor.sample;
+package com.naivor.sample.activity.category;
 
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -40,14 +42,17 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.naivor.sample.R;
+import com.naivor.sample.activity.MainActivity;
+import com.naivor.sample.data.DataRepo;
+
+import timber.log.Timber;
 
 
 /**
  * ExoPlayer原生使用方式
  */
 public class ExoPlayerActivity extends AppCompatActivity {
-
-    String testUrl = "http://video.jiecao.fm/11/23/xin/%E5%81%87%E4%BA%BA.mp4";
 
     private SimpleExoPlayerView playerView;
 
@@ -58,6 +63,13 @@ public class ExoPlayerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_exo_player);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setDisplayShowHomeEnabled(true);
+        actionBar.setDisplayShowTitleEnabled(true);
+        actionBar.setDisplayUseLogoEnabled(false);
+        actionBar.setTitle(getIntent().getStringExtra(MainActivity.EXTRA));
 
         playerView = (SimpleExoPlayerView) findViewById(R.id.player_view);
 
@@ -82,9 +94,36 @@ public class ExoPlayerActivity extends AppCompatActivity {
         DefaultBandwidthMeter defaultBandwidthMeter = new DefaultBandwidthMeter();
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context, Util.getUserAgent(context, "xxx"), defaultBandwidthMeter);
         ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
-        MediaSource videoSource = new ExtractorMediaSource(Uri.parse(testUrl), dataSourceFactory, extractorsFactory, null, null);
+        Uri uri = Uri.parse(DataRepo.get(getApplicationContext()).getVideoUrl().getUrl());
+        MediaSource videoSource = new ExtractorMediaSource(uri, dataSourceFactory, extractorsFactory, null, null);
 
         player.prepare(videoSource);
 
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                break;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        player.stop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        player.release();
     }
 }

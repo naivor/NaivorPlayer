@@ -53,26 +53,31 @@
         <RelativeLayout
             android:id="@+id/rl_tiny"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
             android:visibility="gone">
 
             <Button
                 android:id="@+id/iv_tiny_exit"
-                android:layout_width="48dp"
-                android:layout_height="match_parent"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:background="@drawable/ic_tiny_exit_selector"
                 android:paddingLeft="14dp"
+                android:alpha="100"
                 android:paddingRight="18dp"
                 android:scaleType="centerInside" />
 
             <Button
                 android:id="@+id/iv_tiny_close"
-                android:layout_width="48dp"
-                android:layout_height="match_parent"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:layout_alignParentRight="true"
                 android:background="@drawable/ic_tiny_close_selector"
                 android:paddingLeft="14dp"
                 android:paddingRight="18dp"
+                android:alpha="100"
                 android:scaleType="centerInside" />
 
         </RelativeLayout>

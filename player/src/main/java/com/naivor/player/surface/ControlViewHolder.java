@@ -138,7 +138,7 @@ public class ControlViewHolder {
 
         if (buttomLayout != null) {
             if (state == ScreenState.SCREEN_WINDOW_TINY) {  //小窗隐藏底部控制栏
-                buttomLayout.setVisibility(View.VISIBLE);
+                buttomLayout.setVisibility(View.GONE);
             } else {
                 buttomLayout.setVisibility(View.VISIBLE);
             }
@@ -200,12 +200,6 @@ public class ControlViewHolder {
 
         Timber.d("缓冲：%s", isThumb);
 
-        boolean isShown = false;
-
-        if (buttomLayout != null && buttomLayout.isShown()) {
-            isShown = true;
-        }
-
         if (thumbBar != null) {
             if (isThumb) {
                 playBtn.setVisibility(View.GONE);
@@ -213,7 +207,7 @@ public class ControlViewHolder {
             } else {
                 thumbBar.setVisibility(View.GONE);
 
-                if (isShown) {
+                if (isShown()) {
                     playBtn.setVisibility(View.VISIBLE);
                 }
             }

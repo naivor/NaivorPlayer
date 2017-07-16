@@ -14,16 +14,28 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
-            android:configChanges="orientation|screenSize">
+            android:name=".activity.MainActivity"
+            android:configChanges="orientation|screenSize"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".ExoPlayerActivity"></activity>
+        <activity
+            android:name=".activity.category.ExoPlayerActivity"
+            android:configChanges="orientation|screenSize" />
+        <activity android:name=".activity.category.ListActivity" />
+        <activity
+            android:name=".activity.category.list.ListVideoActivity"
+            android:configChanges="orientation|screenSize" />
+        <activity
+            android:name=".activity.category.list.RecyclerViewVideoActivity"
+            android:configChanges="orientation|screenSize" />
+        <activity
+            android:name=".activity.category.NaivorPlayerActivity"
+            android:configChanges="orientation|screenSize" />
     </application>
 
 </manifest>

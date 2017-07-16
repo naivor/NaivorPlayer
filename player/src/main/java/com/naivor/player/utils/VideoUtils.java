@@ -49,6 +49,27 @@ public final class VideoUtils {
     }
 
     /**
+     * 获取屏幕像素密度相对于标准屏幕(160dpi)倍数
+     *
+     * @return float 屏幕像素密度
+     */
+    public static float getScreenDensity() {
+
+        return Utils.context().getResources().getDisplayMetrics().density;
+    }
+
+
+    /**
+     * 将dp转换成px
+     *
+     * @param dp      dp值
+     * @return px的值
+     */
+    public static int dp2px(float dp) {
+        return (int) (getScreenDensity() * dp + 0.5f);
+    }
+
+    /**
      * 格式化时间为  时：分：秒
      *
      * @param millisecond
@@ -120,7 +141,7 @@ public final class VideoUtils {
      * @return
      */
     public static long getSavedProgress(String url) {
-        return SPUtils.getLong(url, 0);
+        return SPUtils.getLong(url, 0L);
     }
 
     /**
@@ -134,7 +155,7 @@ public final class VideoUtils {
 
             SPUtils.clear();
         } else {
-            SPUtils.save(url, 0);
+            SPUtils.save(url, 0L);
         }
     }
 

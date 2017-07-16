@@ -21,6 +21,10 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_LANDSCAPE;
+import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_PORTRAIT;
+import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_SENSOR;
+
 /**
  * 视图状态，包括窗口和布局
  * <p>
@@ -47,5 +51,35 @@ public final class ScreenState {
     private ScreenState() {
     }
 
+
+    /**
+     * 获取屏幕方向状态的名称
+     *
+     * @param state
+     * @return
+     */
+    public static String getOrientationStateName(@ScreenStateValue int state) {
+        String stateName = null;
+
+        switch (state) {
+            case SCREEN_LAYOUT_ORIGIN:
+                stateName = "默认";
+                break;
+            case SCREEN_LAYOUT_LIST:
+                stateName = "列表";
+                break;
+            case SCREEN_WINDOW_FULLSCREEN:
+                stateName = "全屏";
+                break;
+            case SCREEN_WINDOW_TINY:
+                stateName = "小窗";
+                break;
+
+            default:
+                break;
+        }
+
+        return stateName;
+    }
 
 }

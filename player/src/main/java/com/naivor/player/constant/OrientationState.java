@@ -21,8 +21,16 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import static com.naivor.player.constant.VideoState.CURRENT_STATE_COMPLETE;
+import static com.naivor.player.constant.VideoState.CURRENT_STATE_ERROR;
+import static com.naivor.player.constant.VideoState.CURRENT_STATE_ORIGIN;
+import static com.naivor.player.constant.VideoState.CURRENT_STATE_PAUSE;
+import static com.naivor.player.constant.VideoState.CURRENT_STATE_PLAYING;
+import static com.naivor.player.constant.VideoState.CURRENT_STATE_PLAYING_BUFFERING;
+import static com.naivor.player.constant.VideoState.CURRENT_STATE_PREPARING;
+
 /**
- * 视频方向，如横屏，竖屏
+ * 全屏时视频方向，如横屏，竖屏
  * <p>
  * Created by tianlai on 17-7-7.
  */
@@ -45,6 +53,33 @@ public final class OrientationState {
 
 
     private OrientationState() {
+    }
+
+    /**
+     * 获取屏幕方向状态的名称
+     *
+     * @param state
+     * @return
+     */
+    public static String getOrientationStateName(@OrientationVlaue int state) {
+        String stateName = null;
+
+        switch (state) {
+            case ORIENTATION_TYPE_SENSOR:
+                stateName = "重力感应器";
+                break;
+            case ORIENTATION_TYPE_PORTRAIT:
+                stateName = "竖屏";
+                break;
+            case ORIENTATION_TYPE_LANDSCAPE:
+                stateName = "横屏";
+                break;
+
+            default:
+                break;
+        }
+
+        return stateName;
     }
 
 }

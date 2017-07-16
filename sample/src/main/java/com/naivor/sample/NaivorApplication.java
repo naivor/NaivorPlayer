@@ -20,6 +20,8 @@ import android.app.Application;
 import android.util.Log;
 
 
+import com.naivor.sample.utils.ToastUtil;
+
 import timber.log.Timber;
 
 /**
@@ -37,6 +39,8 @@ public class NaivorApplication extends Application {
         } else {
             Timber.plant(new CrashReportingTree());
         }
+
+        ToastUtil.init(this);
     }
 
 

@@ -67,15 +67,15 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
     protected ExoPlayer player;
 
-    protected final ComponentListener componentListener;  //监听器
+    protected ComponentListener componentListener;  //监听器
 
     protected ControlViewHolder viewHolder;  //控制栏按钮容器
     protected OnControllViewListener onControllViewListener;  //控制栏监听器
 
-    protected final StringBuilder formatBuilder;
-    protected final Formatter formatter;
-    protected final Timeline.Period period;
-    protected final Timeline.Window window;
+    protected StringBuilder formatBuilder;
+    protected Formatter formatter;
+    protected Timeline.Period period;
+    protected Timeline.Window window;
 
     protected boolean isAttachedToWindow;
     protected boolean showMultiWindowTimeBar;
@@ -118,49 +118,52 @@ public class ControlView extends FrameLayout implements PlayController, Position
     public ControlView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        rewindMs = DEFAULT_REWIND_MS;
-        fastForwardMs = DEFAULT_FAST_FORWARD_MS;
-        showTimeoutMs = DEFAULT_SHOW_TIMEOUT_MS;
-
-        period = new Timeline.Period();
-        window = new Timeline.Window();
-        formatBuilder = new StringBuilder();
-        formatter = new Formatter(formatBuilder, Locale.getDefault());
-        adBreakTimesMs = new long[0];
-        componentListener = new ComponentListener();
-
         View.inflate(context, getLayoutRes(), this);
         setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
 
-        viewHolder = new ControlViewHolder(this);
+        if (!isInEditMode()) {
 
-        controlTouchProcessor = new ControlTouchProcessor(context);
+            rewindMs = DEFAULT_REWIND_MS;
+            fastForwardMs = DEFAULT_FAST_FORWARD_MS;
+            showTimeoutMs = DEFAULT_SHOW_TIMEOUT_MS;
 
-        if (viewHolder.timeBar != null) {
-            viewHolder.timeBar.setOnSeekBarChangeListener(componentListener);
+            period = new Timeline.Period();
+            window = new Timeline.Window();
+            formatBuilder = new StringBuilder();
+            formatter = new Formatter(formatBuilder, Locale.getDefault());
+            adBreakTimesMs = new long[0];
+            componentListener = new ComponentListener();
+
+            viewHolder = new ControlViewHolder(this);
+
+            controlTouchProcessor = new ControlTouchProcessor(context);
+
+            if (viewHolder.timeBar != null) {
+                viewHolder.timeBar.setOnSeekBarChangeListener(componentListener);
+            }
+
+            if (viewHolder.playBtn != null) {
+                viewHolder.playBtn.setOnClickListener(componentListener);
+            }
+
+            if (viewHolder.fullScreenBtn != null) {
+                viewHolder.fullScreenBtn.setOnClickListener(componentListener);
+            }
+
+            if (viewHolder.backBtn != null) {
+                viewHolder.backBtn.setOnClickListener(componentListener);
+            }
+
+            if (viewHolder.tinyExitBtn != null) {
+                viewHolder.tinyExitBtn.setOnClickListener(componentListener);
+            }
+
+            if (viewHolder.tinyCloseBtn != null) {
+                viewHolder.tinyCloseBtn.setOnClickListener(componentListener);
+            }
+
+            setOnTouchListener(this);
         }
-
-        if (viewHolder.playBtn != null) {
-            viewHolder.playBtn.setOnClickListener(componentListener);
-        }
-
-        if (viewHolder.fullScreenBtn != null) {
-            viewHolder.fullScreenBtn.setOnClickListener(componentListener);
-        }
-
-        if (viewHolder.backBtn != null) {
-            viewHolder.backBtn.setOnClickListener(componentListener);
-        }
-
-        if (viewHolder.tinyExitBtn != null) {
-            viewHolder.tinyExitBtn.setOnClickListener(componentListener);
-        }
-
-        if (viewHolder.tinyCloseBtn != null) {
-            viewHolder.tinyCloseBtn.setOnClickListener(componentListener);
-        }
-
-        setOnTouchListener(this);
     }
 
     /**
@@ -350,7 +353,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
         Timber.d("更新播放按钮");
 
-        if (!isBottomVisible() || !isAttachedToWindow) {
+        if (!isShown() || !isAttachedToWindow) {
             return;
         }
 
