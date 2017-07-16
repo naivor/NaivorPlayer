@@ -55,5 +55,8 @@ dependencies {
     provided rootProject.ext.dependencies.lombok
     provided rootProject.ext.dependencies.annotation
 
+    debugCompile rootProject.ext.dependencies.leakcanary_debug
+    releaseCompile rootProject.ext.dependencies.leakcanary_release
+
     testCompile rootProject.ext.dependencies.junit
 }
