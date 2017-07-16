@@ -87,7 +87,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     @Getter
     protected AspectRatioFrameLayout contentFrame;
     protected ProgressBar bottomProgressBar;
+
+    //用于全屏，小窗记录原来父控件
     protected ViewGroup parent;
+    protected ViewGroup.LayoutParams parentLayoutParams;
 
     //控制界面的控件
     protected ControlView controlView;
@@ -655,28 +658,35 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
         if (screenState != ScreenState.SCREEN_WINDOW_FULLSCREEN) {
 
-            parent = (ViewGroup) getParent();
+            ViewParent viewParent = getParent();
 
-            if (parent != null) {
-                parent.removeView(this);   //从当前父布局移除
-
-                pause();
+            if (parent == null && viewParent != null) {
 
                 ViewGroup vp = (ViewGroup) (VideoUtils.getActivity(getContext()))  //加入contentView
                         .findViewById(Window.ID_ANDROID_CONTENT);
-                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
-                vp.addView(this, lp);
+                if (viewParent != vp) {
 
-                VideoUtils.getActivity(getContext()).setRequestedOrientation(fullscreenOrientation);
-                VideoUtils.showSupportActionBar(getContext(), false);
+                    parent = (ViewGroup) viewParent;
+                    parentLayoutParams = getLayoutParams();
+                    parent.removeView(this);   //从当前父布局移除
 
-                setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN);
+                    pause();
 
-                resume();
+                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
-                bottomProgressBar.setVisibility(GONE);
+                    vp.addView(this, lp);
+
+                    VideoUtils.getActivity(getContext()).setRequestedOrientation(fullscreenOrientation);
+                    VideoUtils.showSupportActionBar(getContext(), false);
+
+                    setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN);
+
+                    resume();
+
+                    bottomProgressBar.setVisibility(GONE);
+                }
             }
         }
 
@@ -696,20 +706,29 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
                 return;
             }
 
-            parent = (ViewGroup) getParent();
+            ViewParent viewParent = getParent();
 
-            if (parent != null) {
-                parent.removeView(this);   //从当前父布局移除
+            if (parent == null && viewParent != null) {
 
                 ViewGroup vp = (ViewGroup) (VideoUtils.getActivity(getContext()))
                         .findViewById(Window.ID_ANDROID_CONTENT);
 
-                FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(400, 400);
-                lp.gravity = Gravity.RIGHT | Gravity.BOTTOM;
-                vp.addView(this, lp);
+                if (viewParent != vp) {
+                    parent = (ViewGroup) viewParent;
+                    parentLayoutParams = getLayoutParams();
+                    parent.removeView(this);   //从当前父布局移除
+
+                    pause();
+
+                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(400, 400);
+                    lp.gravity = Gravity.RIGHT | Gravity.BOTTOM;
+                    vp.addView(this, lp);
 
 
-                setScreenState(ScreenState.SCREEN_WINDOW_TINY);
+                    setScreenState(ScreenState.SCREEN_WINDOW_TINY);
+
+                    resume();
+                }
             }
         }
 
@@ -731,7 +750,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
                 pause();
 
-                parent.addView(this);
+                parent.addView(this, parentLayoutParams);
 
                 VideoUtils.getActivity(getContext()).setRequestedOrientation(normalOrientation);
                 VideoUtils.showSupportActionBar(getContext(), true);
@@ -742,6 +761,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
                 resume();
 
                 bottomProgressBar.setVisibility(GONE);
+                parent = null;
+                parentLayoutParams = null;
 
                 return true;
             }
