@@ -16,6 +16,7 @@
 
 package com.naivor.player.utils;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.naivor.player.BuildConfig;
@@ -24,24 +25,42 @@ import timber.log.Timber;
 
 /**
  * 日志工具
- *
+ * <p>
  * Created by tianlai on 17-7-10.
  */
 
-public final class LogUtils {
+public final class Utils {
+    private static Context context;
 
-    private LogUtils(){}
+    public static final String SP_VIDEO = "SP_VIDEO";
+    public static final String SP_VIDEO_URL = "SP_VIDEO_URL";
+
+    private Utils() {
+    }
 
 
     /**
      * 初始化
      */
-    public static void  init(){
+    public static void init(Context pContext) {
+        context = pContext.getApplicationContext();
+
         if (BuildConfig.DEBUG) {
             Timber.plant(new Timber.DebugTree());
         } else {
             Timber.plant(new CrashReportingTree());
         }
+
+        SPUtils.init(context, SP_VIDEO);
+
+
+    }
+
+    /**
+     * @return
+     */
+    public static Context context() {
+        return context;
     }
 
 

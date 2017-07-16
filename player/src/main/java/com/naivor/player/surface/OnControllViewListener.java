@@ -100,5 +100,5 @@ public interface OnControllViewListener {
     /**
      * 准备播放的资源
      */
-    void prepareSourceData();
+    void requestPrepareSourceData();
 }

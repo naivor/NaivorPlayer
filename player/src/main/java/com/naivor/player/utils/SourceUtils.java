@@ -118,9 +118,8 @@ public final class SourceUtils {
             case TYPE_OTHER:
                 return new ExtractorMediaSource(uri, mediaDataSourceFactory, new DefaultExtractorsFactory(), mainHandler,
                         eventLogger);
-            default: {
+            default:
                 throw new IllegalStateException("Unsupported type: " + type);
-            }
         }
     }
 

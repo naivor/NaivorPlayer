@@ -35,7 +35,7 @@ import lombok.NonNull;
  * </pre>
  */
 public final class SPUtils {
-    private static final String DEFAULT = "DEFAULT_SP";
+    public static final String DEFAULT = "DEFAULT_SP";
     private static SharedPreferences sp;
 
     /**

@@ -23,19 +23,28 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * 视频方向，如横屏，竖屏
- *
+ * <p>
  * Created by tianlai on 17-7-7.
  */
 
 public final class OrientationState {
 
+
     public static final int ORIENTATION_TYPE_PORTRAIT = 0;
     public static final int ORIENTATION_TYPE_LANDSCAPE = 1;
     public static final int ORIENTATION_TYPE_SENSOR = 2;
 
+    /**
+     * 屏幕方向
+     */
     @IntDef({ORIENTATION_TYPE_SENSOR, ORIENTATION_TYPE_PORTRAIT, ORIENTATION_TYPE_LANDSCAPE})
     @Retention(RetentionPolicy.SOURCE)
     public @interface OrientationVlaue {
 
     }
+
+
+    private OrientationState() {
+    }
+
 }

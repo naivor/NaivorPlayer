@@ -29,19 +29,22 @@ import java.lang.annotation.RetentionPolicy;
 
 public final class ScreenState {
 
-    private ScreenState() {
-    }
-
     public static final int SCREEN_LAYOUT_ORIGIN = 0;
     public static final int SCREEN_LAYOUT_LIST = 1;
     public static final int SCREEN_WINDOW_FULLSCREEN = 2;
     public static final int SCREEN_WINDOW_TINY = 3;
 
 
+    /**
+     * 屏幕窗口
+     */
     @IntDef({SCREEN_LAYOUT_ORIGIN, SCREEN_LAYOUT_LIST, SCREEN_WINDOW_FULLSCREEN,
             SCREEN_WINDOW_TINY})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ScreenStateValue {
+    }
+
+    private ScreenState() {
     }
 
 

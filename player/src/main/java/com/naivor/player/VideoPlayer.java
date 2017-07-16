@@ -61,13 +61,15 @@ import com.naivor.player.core.PlayerCore;
 import com.naivor.player.surface.ControlView;
 import com.naivor.player.surface.DialogHolder;
 import com.naivor.player.surface.OnControllViewListener;
-import com.naivor.player.utils.LogUtils;
+import com.naivor.player.utils.Utils;
 import com.naivor.player.utils.SourceUtils;
 import com.naivor.player.utils.VideoUtils;
 
 import lombok.Getter;
 import lombok.Setter;
 import timber.log.Timber;
+
+import static android.R.attr.x;
 
 
 /**
@@ -81,7 +83,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         VideoController, ExoPlayer.EventListener, SimpleExoPlayer.VideoListener, LoadControl {
 
     public static final int FULL_SCREEN_NORMAL_DELAY = 300;
-    public static boolean SAVE_PROGRESS = true;
 
     @Getter
     protected AspectRatioFrameLayout contentFrame;
@@ -111,7 +112,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     int screenState = ScreenState.SCREEN_LAYOUT_ORIGIN;
 
     protected String url = "";
-    public Object[] objects = null;
+    protected Object[] objects = null;
     protected int seekToInAdvance = 0;
 
     //视频拉伸模式
@@ -138,6 +139,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:  //闪避，暂停播放
                     pause();
                     break;
+                default:
+                    break;
             }
         }
     };
@@ -146,16 +149,18 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     @Getter
     protected SensorEventListener sensorEventListener = new SensorEventListener() {
         @Override
-        public void onSensorChanged(SensorEvent event) {//可以得到传感器实时测量出来的变化值
-            final float x = event.values[SensorManager.DATA_X];
-            float y = event.values[SensorManager.DATA_Y];
-            float z = event.values[SensorManager.DATA_Z];
-            //过滤掉用力过猛会有一个反向的大数值
-            if (((x > -15 && x < -10) || (x < 15 && x > 10)) && Math.abs(y) < 1.5) {
-                if ((System.currentTimeMillis() - lastAutoFullscreenTime) > 2000) {
-                    autoFullscreen(x);
+        public void onSensorChanged(SensorEvent event) { //可以得到传感器实时测量出来的变化值
+            if (event != null) {
+                final float x = event.values[0];
+                float y = event.values[1];
+                float z = event.values[2];
+                //过滤掉用力过猛会有一个反向的大数值
+                if (((x > -15 && x < -10) || (x < 15 && x > 10)) && Math.abs(y) < 1.5) {
+                    if ((System.currentTimeMillis() - lastAutoFullscreenTime) > 2000) {
+                        autoFullscreen(x);
 
-                    lastAutoFullscreenTime = System.currentTimeMillis();
+                        lastAutoFullscreenTime = System.currentTimeMillis();
+                    }
                 }
             }
         }
@@ -168,6 +173,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     @Getter
     @Setter
     protected PlayEventListener playEventListener;
+
 
     public VideoPlayer(@NonNull Context context) {
         this(context, null);
@@ -185,7 +191,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      * @param context
      */
     protected void init(Context context) {
-        LogUtils.init();
+        Utils.init(context);
 
         View.inflate(context, getLayoutId(), this);
         //背景
@@ -239,6 +245,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         if (objects.length != 0) {
             controlView.setVideoTitle(objects[0].toString());
         }
+
+        VideoUtils.saveLastUrl(url);
 
         return true;
     }
@@ -319,9 +327,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         View view = playerCore.getSurfaceView();
 
         if (view != null) {
-            ViewParent parent = view.getParent();
-            if (parent != null) {
-                ((ViewGroup) parent).removeView(view);
+            ViewParent viewParent = view.getParent();
+            if (viewParent != null) {
+                ((ViewGroup) viewParent).removeView(view);
             }
         }
 
@@ -430,6 +438,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
                 break;
             case VideoState.CURRENT_STATE_PLAYING:
+                VideoUtils.clearSavedAutoPause(url);
+                break;
             case VideoState.CURRENT_STATE_PAUSE:
 
                 break;
@@ -440,20 +450,29 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
                 break;
             case VideoState.CURRENT_STATE_COMPLETE:
                 backPress();
-                VideoUtils.saveProgress(getContext(), url, 0);
+                VideoUtils.clearSavedProgress(url);
+                break;
+            default:
                 break;
         }
 
         videoState = state;
 
-        if (state == VideoState.CURRENT_STATE_PLAYING || state == VideoState.CURRENT_STATE_PAUSE) {
-            bottomProgressBar.setVisibility(VISIBLE);
-        } else {
-            bottomProgressBar.setVisibility(GONE);
-        }
+        updateBottomProgress();
 
         if (playEventListener != null) {
             playEventListener.onVideoState(state);
+        }
+    }
+
+    /**
+     * 显示底部播放进度
+     */
+    protected void updateBottomProgress() {
+        if (videoState == VideoState.CURRENT_STATE_PLAYING && !controlView.isShown()) {
+            bottomProgressBar.setVisibility(VISIBLE);
+        } else {
+            bottomProgressBar.setVisibility(GONE);
         }
     }
 
@@ -480,9 +499,13 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
             case ScreenState.SCREEN_LAYOUT_LIST:
 
                 break;
+            default:
+                break;
         }
 
         screenState = state;
+
+        updateBottomProgress();
 
         if (playEventListener != null) {
             playEventListener.onScreenState(state);
@@ -496,17 +519,26 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      */
     @Override
     public void onPrepared() {
-        Timber.d("准备播放完成");
+        Timber.d("准备播放成功，可以开始播放");
 
-        if (videoState != VideoState.CURRENT_STATE_PREPARING) return;
+        if (videoState != VideoState.CURRENT_STATE_PREPARING) {
+            return;
+        }
+        Timber.d("计算播放位置");
 
         if (seekToInAdvance != 0) {   //是否有跳过的进度
+
+            Timber.d("跳过时长：%s", seekToInAdvance);
+
             playerCore.getPlayer().seekTo(seekToInAdvance);
             seekToInAdvance = 0;
         } else {
-            long position = VideoUtils.getSavedProgress(getContext(), url);  //是否有保存的进度
+            long position = VideoUtils.getSavedProgress(url);  //是否有保存的进度
 
             if (position != 0) {
+
+                Timber.d("上次保存的进度：%s", position);
+
                 playerCore.getPlayer().seekTo(position);
             }
         }
@@ -608,7 +640,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
             return true;
         }
 
-        VideoUtils.saveProgress(getContext(), url, getCurrentDuration());
+        VideoUtils.saveProgress(url, getCurrentDuration());
 
         return false;
     }
@@ -755,6 +787,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
             case ExoPlayer.STATE_ENDED:
                 setVideoState(VideoState.CURRENT_STATE_COMPLETE);
                 break;
+            default:
+                break;
         }
     }
 
@@ -806,13 +840,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
             playEventListener.onControllViewShown(shown);
         }
 
-        if (shown) {
-            bottomProgressBar.setVisibility(GONE);
-        } else {
-            if (videoState == VideoState.CURRENT_STATE_PLAYING) {
-                bottomProgressBar.setVisibility(VISIBLE);
-            }
-        }
+        updateBottomProgress();
     }
 
     @Override
@@ -871,7 +899,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     }
 
     @Override
-    public void prepareSourceData() {
+    public void requestPrepareSourceData() {
         if (!VideoUtils.isWifi(getContext()) && !dialogHolder.isPlayWithNotWifi()) {
             dialogHolder.showNotWifiDialog();
         } else {
@@ -894,6 +922,45 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
     }
 
+    /**
+     * activity的onResume生命周期调用，用于继续播放
+     */
+    public void onResume() {
+        if (TextUtils.isEmpty(url)) {
+            url = VideoUtils.getLastUrl();
+        }
+
+        boolean isAutoPause = VideoUtils.isAutoPause(url);
+
+        Timber.d("onResume，是否继续：%s", isAutoPause);
+
+        if (isAutoPause) {
+
+            resume();
+
+            if (videoState == VideoState.CURRENT_STATE_ORIGIN) { //播放源被重置
+                prepareSource();
+            }
+        }
+    }
+
+    /**
+     * activity的onResume生命周期调用，用于保存进度
+     */
+    public void onPause() {
+
+        boolean playing = isPlaying();
+
+        Timber.d("onResume，是否保存：%s", playing);
+
+        if (playing) {
+            VideoUtils.saveAutoPause(url);
+            pause();
+
+            VideoUtils.saveProgress(url, getCurrentDuration());
+
+        }
+    }
 
     /**
      * 释放资源,调用该方法后播放器不能再被使用

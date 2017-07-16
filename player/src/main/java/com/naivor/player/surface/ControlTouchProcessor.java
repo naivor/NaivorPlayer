@@ -40,6 +40,7 @@ public class ControlTouchProcessor {
     public static final int SEEK_STEP = 2; //进度增加的步长
 
     public static final int MOVE_DAMP = 10; //滑动伐值
+    public static final int CLICK_TOUCH_DURATION = 200;  //点击事件的时间伐值
 
     protected Context context;
 
@@ -154,10 +155,12 @@ public class ControlTouchProcessor {
                 scrubbing = false; //继续更新进度
 
                 long between = System.currentTimeMillis() - time;
-                if (between < 100) {  //视为点击事件
+                if (between < CLICK_TOUCH_DURATION) {  //视为点击事件
                     return false;
                 }
 
+                break;
+            default:
                 break;
         }
 

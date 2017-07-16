@@ -27,13 +27,13 @@ import android.support.v7.view.ContextThemeWrapper;
 import android.text.TextUtils;
 import android.view.WindowManager;
 
-import com.naivor.player.VideoPlayer;
 
 import java.util.Formatter;
 import java.util.Locale;
 
 import lombok.NonNull;
 import timber.log.Timber;
+
 
 /**
  * 视频工具类
@@ -42,7 +42,7 @@ import timber.log.Timber;
  */
 
 public final class VideoUtils {
-    private static final String SP_VIDEO = "SP_VIDEO";
+
 
     private VideoUtils() {
 
@@ -90,7 +90,9 @@ public final class VideoUtils {
      * @return
      */
     public static AppCompatActivity getActivity(Context context) {
-        if (context == null) return null;
+        if (context == null) {
+            return null;
+        }
         if (context instanceof AppCompatActivity) {
             return (AppCompatActivity) context;
         } else if (context instanceof ContextThemeWrapper) {
@@ -103,15 +105,10 @@ public final class VideoUtils {
     /**
      * 保存进度
      *
-     * @param context
      * @param url
      * @param progress
      */
-    public static void saveProgress(Context context, String url, long progress) {
-        if (!VideoPlayer.SAVE_PROGRESS) return;
-
-        SPUtils.init(context, SP_VIDEO);
-
+    public static void saveProgress(String url, long progress) {
         SPUtils.save(url, progress);
 
     }
@@ -119,26 +116,19 @@ public final class VideoUtils {
     /**
      * 获取保存的进度
      *
-     * @param context
      * @param url
      * @return
      */
-    public static long getSavedProgress(Context context, String url) {
-        if (!VideoPlayer.SAVE_PROGRESS) return 0;
-
-        SPUtils.init(context, SP_VIDEO);
-
+    public static long getSavedProgress(String url) {
         return SPUtils.getLong(url, 0);
     }
 
     /**
      * 清空进度
      *
-     * @param context context
-     * @param url     if url!=null clear this url progress
+     * @param url if url!=null clear this url progress
      */
-    public static void clearSavedProgress(Context context, String url) {
-        SPUtils.init(context, SP_VIDEO);
+    public static void clearSavedProgress(String url) {
 
         if (TextUtils.isEmpty(url)) {
 
@@ -147,6 +137,61 @@ public final class VideoUtils {
             SPUtils.save(url, 0);
         }
     }
+
+    /**
+     * 保存自动暂停状态
+     *
+     * @param url
+     */
+    public static void saveAutoPause(@NonNull String url) {
+        SPUtils.save(url + "_autoPause", true);
+
+    }
+
+    /**
+     * 获取保存的自动暂停状态
+     *
+     * @param url
+     * @return
+     */
+    public static boolean isAutoPause(@NonNull String url) {
+        return SPUtils.getBoolean(url + "_autoPause", false);
+    }
+
+    /**
+     * 清空进度
+     *
+     * @param url if url!=null clear this url progress
+     */
+    public static void clearSavedAutoPause(String url) {
+
+        if (TextUtils.isEmpty(url)) {
+
+            SPUtils.clear();
+        } else {
+            SPUtils.save(url + "_autoPause", false);
+        }
+    }
+
+    /**
+     * 保存进度
+     *
+     * @param url
+     */
+    public static void saveLastUrl(String url) {
+        SPUtils.save(Utils.SP_VIDEO_URL, url);
+
+    }
+
+    /**
+     * 获取保存的进度
+     *
+     * @return
+     */
+    public static String getLastUrl() {
+        return SPUtils.getString(Utils.SP_VIDEO_URL, "");
+    }
+
 
     /**
      * 改变亮度并计算亮度百分比
@@ -180,7 +225,7 @@ public final class VideoUtils {
         }
 
         WindowManager.LayoutParams params = VideoUtils.getActivity(context).getWindow().getAttributes();
-        if (deltaV >= 1) {//这和声音有区别，必须自己过滤一下负值
+        if (deltaV >= 1) { //这和声音有区别，必须自己过滤一下负值
             deltaV = 1;
         } else if (deltaV <= 0) {
             deltaV = 0.01f;

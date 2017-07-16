@@ -42,6 +42,7 @@ import com.naivor.player.constant.ScreenState;
 import com.naivor.player.constant.VideoState;
 import com.naivor.player.controll.PlayController;
 import com.naivor.player.controll.PositionController;
+import com.naivor.player.core.PlayerCore;
 
 import java.util.Arrays;
 import java.util.Formatter;
@@ -56,53 +57,54 @@ import timber.log.Timber;
  */
 public class ControlView extends FrameLayout implements PlayController, PositionController, View.OnTouchListener {
 
-    public static final int DEFAULT_FAST_FORWARD_MS = 15000;
-    public static final int DEFAULT_REWIND_MS = 5000;
-    public static final int DEFAULT_SHOW_TIMEOUT_MS = 5000;
+    public static final int DEFAULT_FAST_FORWARD_MS = 5000;  //默认快进5秒
+    public static final int DEFAULT_REWIND_MS = 5000;  //默认快退5秒
 
+    public static final int DEFAULT_SHOW_TIMEOUT_MS = 3000;  //控制栏默认3秒无操作隐藏
 
     public static final int MAX_WINDOWS_FOR_MULTI_WINDOW_TIME_BAR = 100;
+    public static final long MAX_POSITION_FOR_SEEK_TO_PREVIOUS = 3000;
 
-    private static final long MAX_POSITION_FOR_SEEK_TO_PREVIOUS = 3000;
+    protected ExoPlayer player;
 
+    protected final ComponentListener componentListener;  //监听器
 
-    private final ComponentListener componentListener;
+    protected ControlViewHolder viewHolder;  //控制栏按钮容器
+    protected OnControllViewListener onControllViewListener;  //控制栏监听器
 
-    private ControlViewHolder viewHolder;
+    protected final StringBuilder formatBuilder;
+    protected final Formatter formatter;
+    protected final Timeline.Period period;
+    protected final Timeline.Window window;
 
-    private final StringBuilder formatBuilder;
-    private final Formatter formatter;
-    private final Timeline.Period period;
-    private final Timeline.Window window;
+    protected boolean isAttachedToWindow;
+    protected boolean showMultiWindowTimeBar;
+    protected boolean multiWindowTimeBar;
+    protected boolean scrubbing;
+    protected int rewindMs;
+    protected int fastForwardMs;
+    protected int showTimeoutMs;
+    protected long hideAtMs;
+    protected long[] adBreakTimesMs;
 
-    private ExoPlayer player;
-    private OnControllViewListener onControllViewListener;
-
-    private boolean isAttachedToWindow;
-    private boolean showMultiWindowTimeBar;
-    private boolean multiWindowTimeBar;
-    private boolean scrubbing;
-    private int rewindMs;
-    private int fastForwardMs;
-    private int showTimeoutMs;
-    private long hideAtMs;
-    private long[] adBreakTimesMs;
-
-    private final Runnable updateProgressAction = new Runnable() {
+    //更新播放进度
+    protected final Runnable updateProgressAction = new Runnable() {
         @Override
         public void run() {
             updateProgress();
         }
     };
 
-    private final Runnable hideAction = new Runnable() {
+    //隐藏控制栏
+    protected final Runnable hideAction = new Runnable() {
         @Override
         public void run() {
             hide();
         }
     };
 
-    private ControlTouchProcessor controlTouchProcessor;
+    //控制栏触碰事件处理器
+    protected ControlTouchProcessor controlTouchProcessor;
 
 
     public ControlView(Context context) {
@@ -197,36 +199,10 @@ public class ControlView extends FrameLayout implements PlayController, Position
     }
 
 
-    public void setShowMultiWindowTimeBar(boolean showMultiWindowTimeBar) {
-        this.showMultiWindowTimeBar = showMultiWindowTimeBar;
-        updateTimeBarMode();
+    @Override
+    public boolean isShown() {
+        return viewHolder.isShown();
     }
-
-    public void setOnControllViewListener(OnControllViewListener onControllViewListener) {
-        this.onControllViewListener = onControllViewListener;
-    }
-
-    public void setRewindIncrementMs(int rewindMs) {
-        this.rewindMs = rewindMs;
-        updateNavigation();
-    }
-
-
-    public void setFastForwardIncrementMs(int fastForwardMs) {
-        this.fastForwardMs = fastForwardMs;
-        updateNavigation();
-    }
-
-
-    public int getShowTimeoutMs() {
-        return showTimeoutMs;
-    }
-
-
-    public void setShowTimeoutMs(int showTimeoutMs) {
-        this.showTimeoutMs = showTimeoutMs;
-    }
-
 
     /**
      * 显示控制界面
@@ -318,7 +294,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
      *
      * @return
      */
-    public boolean isVisible() {
+    public boolean isBottomVisible() {
         if (viewHolder.buttomLayout != null) {
             return viewHolder.buttomLayout.getVisibility() == VISIBLE;
         }
@@ -342,7 +318,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 控制栏超时隐藏
      */
-    private void hideAfterTimeout() {
+    protected void hideAfterTimeout() {
         Timber.d("超时隐藏");
 
         removeCallbacks(hideAction);
@@ -359,7 +335,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 全部更新
      */
-    private void updateAll() {
+    protected void updateAll() {
         Timber.d("更新控制界面");
 
         updatePlayPauseButton();
@@ -370,11 +346,11 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 播放按钮状态更新
      */
-    private void updatePlayPauseButton() {
+    protected void updatePlayPauseButton() {
 
         Timber.d("更新播放按钮");
 
-        if (!isVisible() || !isAttachedToWindow) {
+        if (!isBottomVisible() || !isAttachedToWindow) {
             return;
         }
 
@@ -395,7 +371,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
      *
      * @return
      */
-    private boolean shouldHidePlayBtn() {
+    protected boolean shouldHidePlayBtn() {
         boolean hide = false;
 
         if (onControllViewListener != null) {
@@ -408,8 +384,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 更新导航（广告？）
      */
-    private void updateNavigation() {
-        if (!isVisible() || !isAttachedToWindow) {
+    protected void updateNavigation() {
+        if (!isBottomVisible() || !isAttachedToWindow) {
             return;
         }
         Timeline timeline = player != null ? player.getCurrentTimeline() : null;
@@ -433,7 +409,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 更新进度条模式
      */
-    private void updateTimeBarMode() {
+    protected void updateTimeBarMode() {
         if (player == null) {
             return;
         }
@@ -444,10 +420,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 更新播放进度
      */
-    private void updateProgress() {
-        if (!isVisible() || !isAttachedToWindow) {
-            return;
-        }
+    protected void updateProgress() {
 
         long position = 0;
         long bufferedPosition = 0;
@@ -520,8 +493,10 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
             Timber.v("更新进度：%s,缓冲进度：%s", progress, bufferedProgress);
 
-            viewHolder.timeBar.setProgress(progress);
-            viewHolder.timeBar.setSecondaryProgress(bufferedProgress);
+            if (isBottomVisible() && isAttachedToWindow) {
+                viewHolder.timeBar.setProgress(progress);
+                viewHolder.timeBar.setSecondaryProgress(bufferedProgress);
+            }
 
             if (onControllViewListener != null) {
                 onControllViewListener.onProgress(progress, bufferedProgress);
@@ -565,8 +540,12 @@ public class ControlView extends FrameLayout implements PlayController, Position
         }
     }
 
+    /**
+     * @param view
+     * @param alpha
+     */
     @TargetApi(11)
-    private void setViewAlphaV11(View view, float alpha) {
+    protected void setViewAlphaV11(View view, float alpha) {
         view.setAlpha(alpha);
     }
 
@@ -575,7 +554,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
         player.setPlayWhenReady(true);
 
         if (onControllViewListener != null) {
-            onControllViewListener.prepareSourceData();
+            onControllViewListener.requestPrepareSourceData();
         }
     }
 
@@ -631,11 +610,17 @@ public class ControlView extends FrameLayout implements PlayController, Position
         start();
     }
 
-    private void rewind() {
+    /**
+     * 快退
+     */
+    public void rewind() {
         backward(rewindMs);
     }
 
-    private void fastForward() {
+    /**
+     * 快进
+     */
+    public void fastForward() {
         fastward(fastForwardMs);
     }
 
@@ -676,7 +661,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
      * @param windowIndex
      * @param positionMs
      */
-    private void seekTo(int windowIndex, long positionMs) {
+    protected void seekTo(int windowIndex, long positionMs) {
         player.seekTo(windowIndex, positionMs);
     }
 
@@ -685,7 +670,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
      *
      * @param timebarPositionMs
      */
-    private void seekToTimebarPosition(long timebarPositionMs) {
+    protected void seekToTimebarPosition(long timebarPositionMs) {
         if (multiWindowTimeBar) {
             Timeline timeline = player.getCurrentTimeline();
             int windowCount = timeline.getWindowCount();
@@ -727,6 +712,11 @@ public class ControlView extends FrameLayout implements PlayController, Position
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
         isAttachedToWindow = true;
+
+        if (player == null) {
+            player = PlayerCore.instance(getContext()).getPlayer();
+        }
+
         if (hideAtMs != C.TIME_UNSET) {
             long delayMs = hideAtMs - SystemClock.uptimeMillis();
             if (delayMs <= 0) {
@@ -802,8 +792,14 @@ public class ControlView extends FrameLayout implements PlayController, Position
         return true;
     }
 
+    /**
+     * 是否是媒体按键
+     *
+     * @param keyCode
+     * @return
+     */
     @SuppressLint("InlinedApi")
-    private static boolean isHandledMediaKey(int keyCode) {
+    protected static boolean isHandledMediaKey(int keyCode) {
         return keyCode == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD
                 || keyCode == KeyEvent.KEYCODE_MEDIA_REWIND
                 || keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
@@ -815,11 +811,59 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
 
     /**
+     * @param showMultiWindowTimeBar
+     */
+    public void setShowMultiWindowTimeBar(boolean showMultiWindowTimeBar) {
+        this.showMultiWindowTimeBar = showMultiWindowTimeBar;
+        updateTimeBarMode();
+    }
+
+    public void setOnControllViewListener(OnControllViewListener onControllViewListener) {
+        this.onControllViewListener = onControllViewListener;
+    }
+
+    /**
+     * @param rewindMs
+     */
+    public void setRewindIncrementMs(int rewindMs) {
+        this.rewindMs = rewindMs;
+        updateNavigation();
+    }
+
+
+    /**
+     * @param fastForwardMs
+     */
+    public void setFastForwardIncrementMs(int fastForwardMs) {
+        this.fastForwardMs = fastForwardMs;
+        updateNavigation();
+    }
+
+
+    public int getShowTimeoutMs() {
+        return showTimeoutMs;
+    }
+
+
+    public void setShowTimeoutMs(int showTimeoutMs) {
+        this.showTimeoutMs = showTimeoutMs;
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        boolean processTouchEvent = controlTouchProcessor.processTouchEvent(motionEvent, onControllViewListener, scrubbing);
+        if (!processTouchEvent) {
+            show();
+        }
+        return processTouchEvent;
+    }
+
+    /**
      * @param timeline
      * @param period
      * @return
      */
-    private static boolean canShowMultiWindowTimeBar(Timeline timeline, Timeline.Period period) {
+    protected static boolean canShowMultiWindowTimeBar(Timeline timeline, Timeline.Period period) {
         if (timeline.getWindowCount() > MAX_WINDOWS_FOR_MULTI_WINDOW_TIME_BAR) {
             return false;
         }
@@ -833,21 +877,16 @@ public class ControlView extends FrameLayout implements PlayController, Position
         return true;
     }
 
-    @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
-        boolean processTouchEvent = controlTouchProcessor.processTouchEvent(motionEvent, onControllViewListener, scrubbing);
-        if (!processTouchEvent) {
-            show();
-        }
-        return processTouchEvent;
-    }
-
     /**
      * 监听器，监听播放事件，点击事件，拖动事件
      */
-    private final class ComponentListener implements ExoPlayer.EventListener, SeekBar.OnSeekBarChangeListener,
+    protected final class ComponentListener implements ExoPlayer.EventListener, SeekBar.OnSeekBarChangeListener,
             OnClickListener {
 
+        /**
+         * @param adBreakTimesMs
+         * @param adBreakCount
+         */
         void setAdBreakTimesMs(@Nullable long[] adBreakTimesMs, int adBreakCount) {
 
         }
@@ -866,6 +905,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
                     break;
                 case ExoPlayer.STATE_ENDED:
                     onComplete();
+                    break;
+                default:
                     break;
             }
 
@@ -957,7 +998,11 @@ public class ControlView extends FrameLayout implements PlayController, Position
             }
         }
 
-        private long getPositionTimeMs(int progress) {
+        /**
+         * @param progress
+         * @return
+         */
+        protected long getPositionTimeMs(int progress) {
             if (player != null) {
                 return player.getDuration() * progress / 100;
             }

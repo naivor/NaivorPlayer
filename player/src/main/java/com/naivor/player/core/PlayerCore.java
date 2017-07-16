@@ -38,7 +38,7 @@ import lombok.NonNull;
  * <p>
  * Created by tianlai on 17-7-7.
  */
-public class PlayerCore {
+public final class PlayerCore {
 
     private Context context;
 
@@ -162,7 +162,15 @@ public class PlayerCore {
         this.trackSelector = trackSelector;
     }
 
+    /**
+     * @return
+     */
     public SimpleExoPlayer getPlayer() {
+
+        if (player == null) {
+            createPlayer(context);
+        }
+
         return player;
     }
 

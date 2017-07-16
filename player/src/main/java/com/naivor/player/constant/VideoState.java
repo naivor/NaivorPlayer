@@ -29,9 +29,6 @@ import java.lang.annotation.RetentionPolicy;
 
 public final class VideoState {
 
-    private VideoState() {
-    }
-
     public static final int CURRENT_STATE_ORIGIN = 0;
     public static final int CURRENT_STATE_PREPARING = 1;
     public static final int CURRENT_STATE_PLAYING_BUFFERING = 2;
@@ -41,12 +38,17 @@ public final class VideoState {
     public static final int CURRENT_STATE_ERROR = 6;
 
 
+    /**
+     * 视频播放状态
+     */
     @IntDef({CURRENT_STATE_ORIGIN, CURRENT_STATE_PREPARING, CURRENT_STATE_PLAYING,
             CURRENT_STATE_PLAYING_BUFFERING, CURRENT_STATE_PAUSE, CURRENT_STATE_COMPLETE, CURRENT_STATE_ERROR})
     @Retention(RetentionPolicy.SOURCE)
     public @interface VideoStateValue {
     }
 
+    private VideoState() {
+    }
 
     /**
      * 获取视频状态的名称

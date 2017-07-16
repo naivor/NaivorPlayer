@@ -42,6 +42,9 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
 
+/**
+ * ExoPlayer原生使用方式
+ */
 public class ExoPlayerActivity extends AppCompatActivity {
 
     String testUrl = "http://video.jiecao.fm/11/23/xin/%E5%81%87%E4%BA%BA.mp4";

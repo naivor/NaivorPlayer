@@ -204,7 +204,7 @@
         <module name="NoWhitespaceBefore" />
         <!-- 操作符换行策略检查 -->
         <module name="OperatorWrap">
-            <property name="option" value="eol" />
+            <property name="option" value="nl" />
         </module>
         <!-- 圆括号空白 -->
         <module name="ParenPad" />

@@ -19,6 +19,7 @@
         android:layout_height="1.5dp"
         android:layout_gravity="bottom"
         android:max="100"
+        android:visibility="gone"
         android:progressDrawable="@drawable/bg_bottom_progress" />
 
     <com.naivor.player.surface.ControlView
