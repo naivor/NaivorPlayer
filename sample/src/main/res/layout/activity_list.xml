@@ -5,8 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center"
     tools:context="com.naivor.sample.activity.category.ListActivity">
 
 
@@ -14,6 +12,9 @@
         android:id="@+id/btn_listview"
         android:layout_width="match_parent"
         android:layout_height="48dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
         android:background="#FFFFFF"
         android:gravity="center"
         android:text="ListView中播放视频" />
@@ -25,7 +26,9 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:background="#FFFFFF"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
         android:gravity="center"
         android:text="RecyclerView中播放视频" />
 </LinearLayout>

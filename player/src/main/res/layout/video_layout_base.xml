@@ -10,6 +10,11 @@
         android:layout_height="match_parent"
         android:layout_gravity="center">
 
+        <ImageView
+            android:id="@+id/iv_artwork"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY" />
     </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
 
     <ProgressBar
@@ -19,8 +24,8 @@
         android:layout_height="1.5dp"
         android:layout_gravity="bottom"
         android:max="100"
-        android:visibility="gone"
-        android:progressDrawable="@drawable/bg_bottom_progress" />
+        android:progressDrawable="@drawable/bg_bottom_progress"
+        android:visibility="gone" />
 
     <com.naivor.player.surface.ControlView
         android:id="@+id/cv_controll"

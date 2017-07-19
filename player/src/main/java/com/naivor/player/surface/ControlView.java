@@ -121,49 +121,47 @@ public class ControlView extends FrameLayout implements PlayController, Position
         View.inflate(context, getLayoutRes(), this);
         setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
 
-        if (!isInEditMode()) {
+        viewHolder = new ControlViewHolder(this);
 
-            rewindMs = DEFAULT_REWIND_MS;
-            fastForwardMs = DEFAULT_FAST_FORWARD_MS;
-            showTimeoutMs = DEFAULT_SHOW_TIMEOUT_MS;
 
-            period = new Timeline.Period();
-            window = new Timeline.Window();
-            formatBuilder = new StringBuilder();
-            formatter = new Formatter(formatBuilder, Locale.getDefault());
-            adBreakTimesMs = new long[0];
-            componentListener = new ComponentListener();
+        rewindMs = DEFAULT_REWIND_MS;
+        fastForwardMs = DEFAULT_FAST_FORWARD_MS;
+        showTimeoutMs = DEFAULT_SHOW_TIMEOUT_MS;
 
-            viewHolder = new ControlViewHolder(this);
+        period = new Timeline.Period();
+        window = new Timeline.Window();
+        formatBuilder = new StringBuilder();
+        formatter = new Formatter(formatBuilder, Locale.getDefault());
+        adBreakTimesMs = new long[0];
+        componentListener = new ComponentListener();
 
-            controlTouchProcessor = new ControlTouchProcessor(context);
+        controlTouchProcessor = new ControlTouchProcessor(context);
 
-            if (viewHolder.timeBar != null) {
-                viewHolder.timeBar.setOnSeekBarChangeListener(componentListener);
-            }
-
-            if (viewHolder.playBtn != null) {
-                viewHolder.playBtn.setOnClickListener(componentListener);
-            }
-
-            if (viewHolder.fullScreenBtn != null) {
-                viewHolder.fullScreenBtn.setOnClickListener(componentListener);
-            }
-
-            if (viewHolder.backBtn != null) {
-                viewHolder.backBtn.setOnClickListener(componentListener);
-            }
-
-            if (viewHolder.tinyExitBtn != null) {
-                viewHolder.tinyExitBtn.setOnClickListener(componentListener);
-            }
-
-            if (viewHolder.tinyCloseBtn != null) {
-                viewHolder.tinyCloseBtn.setOnClickListener(componentListener);
-            }
-
-            setOnTouchListener(this);
+        if (viewHolder.timeBar != null) {
+            viewHolder.timeBar.setOnSeekBarChangeListener(componentListener);
         }
+
+        if (viewHolder.playBtn != null) {
+            viewHolder.playBtn.setOnClickListener(componentListener);
+        }
+
+        if (viewHolder.fullScreenBtn != null) {
+            viewHolder.fullScreenBtn.setOnClickListener(componentListener);
+        }
+
+        if (viewHolder.backBtn != null) {
+            viewHolder.backBtn.setOnClickListener(componentListener);
+        }
+
+        if (viewHolder.tinyExitBtn != null) {
+            viewHolder.tinyExitBtn.setOnClickListener(componentListener);
+        }
+
+        if (viewHolder.tinyCloseBtn != null) {
+            viewHolder.tinyCloseBtn.setOnClickListener(componentListener);
+        }
+
+        setOnTouchListener(this);
     }
 
     /**

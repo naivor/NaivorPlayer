@@ -29,24 +29,26 @@
             android:background="@color/controllBarBg"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:visibility="visible">
+            android:visibility="gone">
 
             <Button
                 android:id="@+id/iv_back"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
                 android:background="@drawable/ic_back_selector"
-                android:scaleType="centerInside" />
+                android:scaleType="center" />
 
             <TextView
                 android:id="@+id/tv_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:lines="1"
                 android:text="视频标题"
                 android:textColor="@android:color/white"
-                android:textSize="20sp" />
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -63,9 +65,9 @@
                 android:id="@+id/iv_tiny_exit"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:alpha="100"
                 android:background="@drawable/ic_tiny_exit_selector"
                 android:paddingLeft="14dp"
-                android:alpha="100"
                 android:paddingRight="18dp"
                 android:scaleType="centerInside" />
 
@@ -74,10 +76,10 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_alignParentRight="true"
+                android:alpha="100"
                 android:background="@drawable/ic_tiny_close_selector"
                 android:paddingLeft="14dp"
                 android:paddingRight="18dp"
-                android:alpha="100"
                 android:scaleType="centerInside" />
 
         </RelativeLayout>

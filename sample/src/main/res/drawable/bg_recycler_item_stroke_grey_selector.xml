@@ -1,4 +1,4 @@
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2017. Naivor.All rights reserved.
   ~
   ~  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +14,7 @@
   ~  limitations under the License.
   -->
 
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="48dp"
-    android:height="48dp"
-    android:viewportHeight="24.0"
-    android:viewportWidth="24.0">
-    <path
-        android:fillColor="#c3ffffff"
-        android:pathData="M15.41,16.09l-4.58,-4.59 4.58,-4.59L14,5.5l-6,6 6,6z" />
-</vector>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/bg_recycler_item_stroke_grey_deep" android:state_pressed="true" />
+    <item android:drawable="@drawable/bg_recycler_item_stroke_grey" />
+</selector>

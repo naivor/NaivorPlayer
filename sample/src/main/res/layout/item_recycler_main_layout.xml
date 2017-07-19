@@ -18,8 +18,8 @@
     android:id="@+id/tv_name"
     android:layout_width="match_parent"
     android:layout_height="48dp"
-    android:layout_marginTop="2dp"
-    android:background="@drawable/bg_recycler_item_stroke_grey"
+    android:layout_marginTop="5dp"
+    android:background="@drawable/bg_recycler_item_stroke_grey_selector"
     android:gravity="center"
     android:text="itemName"
     android:textColor="@color/colorPrimary">

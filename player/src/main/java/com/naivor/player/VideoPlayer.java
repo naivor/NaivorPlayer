@@ -19,6 +19,7 @@ package com.naivor.player;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -38,6 +39,7 @@ import android.view.ViewParent;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -60,6 +62,7 @@ import com.naivor.player.core.PlayerCore;
 import com.naivor.player.surface.ControlView;
 import com.naivor.player.surface.DialogHolder;
 import com.naivor.player.surface.OnControllViewListener;
+import com.naivor.player.surface.VideoPreview;
 import com.naivor.player.utils.SourceUtils;
 import com.naivor.player.utils.Utils;
 import com.naivor.player.utils.VideoUtils;
@@ -95,6 +98,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
     //控制界面的控件
     protected ControlView controlView;
+    //视频预览
+    protected VideoPreview videoPreview;
 
     protected DialogHolder dialogHolder;
 
@@ -210,7 +215,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
             contentFrame.setResizeMode(resizeMode);
 
             mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-            mAudioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN); //请求音频焦点
+            mAudioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC,
+                    AudioManager.AUDIOFOCUS_GAIN); //请求音频焦点
 
             playerCore = PlayerCore.instance(getContext());
             playerCore.setEventListener(this);
@@ -221,6 +227,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
             controlView.setPlayer(playerCore.getPlayer());
             controlView.setOnControllViewListener(this);
+
+            videoPreview = new VideoPreview(contentFrame, (ImageView) findViewById(R.id.iv_artwork),
+                    playerCore.getPlayer());
         }
     }
 
@@ -482,6 +491,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
             bottomProgressBar.setVisibility(GONE);
         }
     }
+
 
     /**
      * 改变屏幕状态
@@ -796,6 +806,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     @Override
     public void onTimelineChanged(Timeline timeline, Object o) {
         Timber.d("onTimelineChanged");
+
+        videoPreview.updatePreview();
     }
 
     @Override
@@ -1022,6 +1034,36 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         objects = null;
         sensorEventListener = null;
         playEventListener = null;
+        videoPreview = null;
+    }
+
+
+    /**
+     * 获取显示预览的控件
+     *
+     * @return
+     */
+    public ImageView getPreviewView() {
+        if (videoPreview != null) {
+            return videoPreview.getPreview();
+        }
+        return null;
+    }
+
+    /**
+     * 设置预览图片
+     *
+     * @param bitmap
+     */
+    public void setPreviewImage(@lombok.NonNull Bitmap bitmap) {
+        if (videoPreview != null) {
+            videoPreview.setDefaultPreview(bitmap);
+
+            ImageView imageView = videoPreview.getPreview();
+            if (imageView != null) {
+                imageView.setImageBitmap(bitmap);
+            }
+        }
     }
 
 }
