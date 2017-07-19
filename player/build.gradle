@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
 
 android {
     compileSdkVersion rootProject.ext.android.compileSdkVersion
@@ -49,4 +50,11 @@ dependencies {
 
 
 
-apply from: 'bintrayUpload.gradle'
+publish {
+    userOrg = 'naivor'
+    groupId = 'com.naivor'
+    artifactId = 'player'
+    publishVersion = '1.0.1'
+    desc = 'A easy use player based Exoplayer whit beautiful UI'
+    website = 'https://github.com/naivor/NaivorPlayer'      // 项目的主页
+}
