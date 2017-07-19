@@ -56,7 +56,9 @@ ext {
             mockitoCore        : 'org.mockito:mockito-core:2.7.22',
             mockitoAndroid     : 'org.mockito:mockito-android:2.7.22',
 
-            robolectric        : "org.robolectric:robolectric:3.3.2"
+            robolectric        : "org.robolectric:robolectric:3.3.2",
+
+            adapter            : "com.naivor:adapter:1.0.8",
     ]
 
 

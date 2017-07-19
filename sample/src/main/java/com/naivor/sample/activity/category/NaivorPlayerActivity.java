@@ -119,8 +119,8 @@ public class NaivorPlayerActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         videoPlayer.release();
+        super.onDestroy();
     }
 
 

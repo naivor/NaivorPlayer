@@ -1,81 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center"
-    android:padding="24dp"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
 
-    <Button
-        android:id="@+id/btn_exo"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_content"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:text="ExoPlayre 播放视频" />
-
-    <Button
-        android:id="@+id/btn_naivor"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:text="NaivorPlayer 播放视频" />
-
-    <Button
-        android:id="@+id/btn_list"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:text="在ListView中播放视频" />
-
-    <Button
-        android:id="@+id/btn_ui"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:text="自定义播放UI" />
-
-    <Button
-        android:id="@+id/btn_words"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:text="播放视频显示字幕" />
-
-    <Button
-        android:id="@+id/btn_multiSource"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:text="多视频源切换" />
-
-    <Button
-        android:id="@+id/btn_download"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:text="边下边播" />
-
-    <Button
-        android:id="@+id/btn_danmu"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
-        android:background="#FFFFFF"
-        android:gravity="center"
-        android:text="集成弹幕" />
-</LinearLayout>
+        android:layout_height="match_parent"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginTop="12dp" />
+</FrameLayout>

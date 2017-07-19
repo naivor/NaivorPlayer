@@ -1,33 +1,45 @@
 <resources>
     <string name="app_name">NaivorPlayer</string>
+    <string name="txt_btn_exo">ExoPlayre 播放视频</string>
+    <string name="txt_btn_naivor">NaivorPlayer 播放视频</string>
+    <string name="txt_btn_list">在ListView中播放视频</string>
+    <string name="txt_btn_ui">自定义播放UI</string>
+    <string name="txt_btn_words">播放视频显示字幕</string>
+    <string name="txt_btn_multiSource">多视频源切换</string>
+    <string name="txt_btn_download">边下边播</string>
+    <string name="txt_btn_danmu">集成弹幕</string>
 
     <string-array name="videoUrls">
-        <item>http://alicdn.ku6.com/v648/42/81/c6d5af2f233ea225fd357fdc0e3136d9-f4v-h264-aac-398-32-248640.0-13580929-1489500778796-465de40426bbcb455fa5bc14fcd2b8d8-1-00-00-00.f4v.mp4?auth_key=1500208816-0-0-0d366eb92069ceb93053278b4c12d762</item>
-        <item>http://alicdn.ku6.com/v527/35/26/4e9fcf0306ccc936876cbc7cd7b19987-f4v-h264-aac-389-32-259040.0-13849015-1489500828412-7c51a2c45713a90045bf2b3019e07176-1-00-00-00.f4v.mp4?auth_key=1500209040-0-0-3ec6e15c61eaaf526b479ec056362419</item>
-        <item>http://alicdn.ku6.com/v651/44/14/22239e62049cacdef5ad33c65dc05d5b-f4v-h264-aac-443-32-250680.0-15106441-1489501113345-e2d52c59af8b5e192410963affaa0b81-1-00-00-00.f4v.mp4?auth_key=1500209112-0-0-23a7db84818a789d007ff0be064dcbfe</item>
-        <item>http://alicdn.ku6.com/v266/85/46/0b5316c460be789e76f88d946d930c5d-f4v-h264-aac-392-32-241200.0-12981916-1487552778289-bfc131f88760bfd55f150de8d9f60785-1-00-00-00.f4v.mp4?auth_key=1500209179-0-0-d160d839659dc027121ea8553a176b5f</item>
-        <item>http://alicdn.ku6.com/v496/38/28/e3badf5be21d00ffe2950b4799ba52f7-f4v-h264-aac-185-32-236320.0-6620309-1489500447346-82d556eddaa4d798eb200c421ece28bd-1-00-00-00.f4v.mp4?auth_key=1500209207-0-0-855828c63d3bad0affb496102570131f</item>
-        <item>http://alicdn.ku6.com/v379/91/72/b05b11e02ed83227a197f84ad9111c18-f4v-h264-aac-337-32-207494.0-9759779-1489500309427-d22c4d9c3a615fbaddb01c99b03f93b8-1-00-00-00.f4v.mp4?auth_key=1500209420-0-0-33fe8595596b5330c73af757ab34908e</item>
-        <item>http://alicdn.ku6.com/v138/3/45/0fccefe76961af78eb078ea34ae69431-f4v-h264-aac-374-32-75233.0-3873854-1488442508149-00ace47492dcd681da2bfc7bb58ec85b-1-00-00-00.f4v.mp4?auth_key=1500209887-0-0-53c10a667c2d077acbd10da38d2ce79d</item>
-        <item>http://alicdn.ku6.com/v482/55/7/3333d74170e2d076b29d05645646bc76-f4v-h264-aac-363-32-106627.0-5356198-1487923796243-cbedab1be51da2b84fcfcbe54ec8adf2-1-00-00-00.f4v.mp4?auth_key=1500209955-0-0-3156e4b7077f8cb6af70f336e26b74b1</item>
-        <item>http://alicdn.ku6.com/v452/78/37/04714b2863ba4f311d5335b1c2445991-f4v-h264-aac-356-32-117865.0-5814284-1475215941518-c5100d3fd99a3d24a33c227d2fb8c1a5-1-00-00-00.f4v.mp4?auth_key=1500210085-0-0-3096744fc92aad8c87e6c0f5dece9ea0</item>
-        <item>http://alicdn.ku6.com/v252/10/40/ce05d95231522b446dedb21609170393-f4v-h264-aac-1164-32-104280.0-15683836-1463723795212-9f13ce904fb5f2562eda2a08b4aac87d-1-00-00-00.f4v.mp4?auth_key=1500210186-0-0-fa7569700a21624a53ae782bcd1fa306</item>
-        <item>http://alicdn.ku6.com/v642/98/84/4e00bd90b30f7b8df6b881e58cb64be9-f4v-h264-aac-251-32-257417.0-9258442-1397303617450-e9e406893efd96b4cca26bcc15bb42da-1-00-00-00.f4v.mp4?auth_key=1500210292-0-0-fa4c9c5d2c4f246fd0628a0f14b9065d</item>
-        <item>http://alicdn.ku6.com/v653/29/66/ccc5bda9fa7eb81273e80d4f79ca951f-f4v-h264-aac-259-32-270067.0-9992141-1391173543326-e2b18265e6061cbfff97a74209f4d0c1-1-00-00-00.f4v.mp4?auth_key=1500210385-0-0-db55fd73910f4fed790c258df766ac53</item>
+        <item>http://ku6tai.sinaapp.com/ku6/L9c03doAgbOrNdMT-hRVmA...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/rTAzbbIbi8SYMv9dGDo6Pg...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/kQnZwwnHq0mcrkO40h7k3g...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/YmPu3rGDbcMzpiW-amw4DQ...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/iazgNIGvz4VPp0VnUjZtlA...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/aRCqqEPgd_7bPszK8wehPA...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/H6FkmTk5Y4yD2pX3EuAw2g...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/uMgu3FSN1R7tqI3YZv7KYg...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/-NfYQsQF3f6rAxBziRGp-A...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/jA-kr5ynUEnWpYyXW22y5Q...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/p8CZfMVX492ocjGLtDb_LA...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/c_caX-JRC0ey_aXFy6DULg...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/LC3cW2BAt0d7e_OLFGZRlQ...mp4</item>
+        <item>http://ku6tai.sinaapp.com/ku6/9nMBx9ZHbjF34musijutcA...mp4</item>
     </string-array>
 
     <string-array name="videoNames">
-        <item>【秒五/治愈向】就算一切很糟糕...</item>
-        <item>治愈向 幸福就在那些平淡的时光里</item>
-        <item>天行九歌混剪 一个全新的秦时</item>
-        <item>（命运石之门）你我存在的世界</item>
-        <item>当狐妖的[梦回还]遇上Fate的 brave shine</item>
-        <item>【白白和小白】）看一遍哭一遍的龙女仆</item>
+        <item>Number 9 中文字幕-- T-ara</item>
         <item>【剧场版】 呼唤星星的少女 特报PV1</item>
-        <item>【3DCG剧场版】杀戮都市O(GANTZO) 预告</item>
-        <item>[新番动画《逆光之颤》PV曝光</item>
-        <item>打开《镇魂街》的正确方式 十冷逗比再延续</item>
-        <item>MAD【治愈向】好痛苦，好难过，好喜欢你</item>
-        <item>流泪是因为我喜欢你【治愈向MAD】[720P版]</item>
+        <item>【秒五/治愈向】就算一切很糟糕...</item>
+        <item>【多素材治愈】幸福就在那些平淡的时光里</item>
+        <item>[MAD]天行九歌</item>
+        <item>当狐妖的[梦回还]遇上Fate的 brave shine</item>
+        <item>Fate/Grand Order剪辑 - Star Sky</item>
+        <item>张赫宣《Freedom》MV首播 唯美电影撩动心弦</item>
+        <item>《阳光小鬼头》正式版MV</item>
+        <item>VAV最新数码单曲A・B・C(Middle of the Night)</item>
+        <item>李翊君《爱情路口》首发 徘徊爱与不爱之间</item>
+        <item>《闪光少女》发布旗舰概念曲《电光石火之间》</item>
+        <item>小爱与花儿乐队乐献唱主题曲《记忆大师》</item>
+        <item>琵琶《凉凉》三生三世十里桃花</item>
     </string-array>
 </resources>

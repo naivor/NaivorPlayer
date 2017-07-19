@@ -23,13 +23,11 @@ import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.view.ViewCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -62,15 +60,13 @@ import com.naivor.player.core.PlayerCore;
 import com.naivor.player.surface.ControlView;
 import com.naivor.player.surface.DialogHolder;
 import com.naivor.player.surface.OnControllViewListener;
-import com.naivor.player.utils.Utils;
 import com.naivor.player.utils.SourceUtils;
+import com.naivor.player.utils.Utils;
 import com.naivor.player.utils.VideoUtils;
 
 import lombok.Getter;
 import lombok.Setter;
 import timber.log.Timber;
-
-import static android.R.attr.x;
 
 
 /**
@@ -755,6 +751,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     public boolean backOriginWindow() {
         return backOriginWindow(true);
     }
+
     /**
      * 退出全屏和小窗
      */
@@ -950,7 +947,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
     @Override
     public void requestPrepareSourceData() {
-        if (!VideoUtils.isWifi(getContext()) && !dialogHolder.isPlayWithNotWifi()) {
+        if (!VideoUtils.isWifi() && !dialogHolder.isPlayWithNotWifi()) {
             dialogHolder.showNotWifiDialog();
         } else {
             prepareSource();

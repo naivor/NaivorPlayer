@@ -79,9 +79,9 @@ public final class PlayerCore {
     }
 
     private PlayerCore(@NonNull Context context) {
-        this.context = context;
+        this.context = context.getApplicationContext();
 
-        createPlayer(context);
+        createPlayer(this.context);
     }
 
     /**
@@ -143,6 +143,12 @@ public final class PlayerCore {
         renderersFactory = null;
         trackSelector = null;
         loadControl = null;
+
+        eventListener=null;
+        videoListener=null;
+
+        surfaceView=null;
+        mediaSource=null;
 
     }
 

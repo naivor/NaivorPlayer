@@ -95,11 +95,10 @@ public final class VideoUtils {
     /**
      * 当前是否使用WiFi
      *
-     * @param context
      * @return
      */
-    public static boolean isWifi(Context context) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    public static boolean isWifi() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) Utils.context().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         return networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI;
     }
