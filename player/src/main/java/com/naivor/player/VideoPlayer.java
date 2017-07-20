@@ -21,9 +21,6 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.support.annotation.LayoutRes;
@@ -124,6 +121,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     protected Object[] objects = null;
     protected int seekToInAdvance = 0;
 
+    //是否开启自动缓冲，即设置播放url的时候就开始缓冲
+    @Getter
+    @Setter
+    protected boolean autoPrepare = false;
+
     //视频拉伸模式
     @Getter
     protected
@@ -154,30 +156,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         }
     };
 
-    //监听传感器
-    @Getter
-    protected SensorEventListener sensorEventListener = new SensorEventListener() {
-        @Override
-        public void onSensorChanged(SensorEvent event) { //可以得到传感器实时测量出来的变化值
-            if (event != null) {
-                final float x = event.values[0];
-                float y = event.values[1];
-                float z = event.values[2];
-                //过滤掉用力过猛会有一个反向的大数值
-                if (((x > -15 && x < -10) || (x < 15 && x > 10)) && Math.abs(y) < 1.5) {
-                    if ((System.currentTimeMillis() - lastAutoFullscreenTime) > 2000) {
-                        autoFullscreen(x);
-
-                        lastAutoFullscreenTime = System.currentTimeMillis();
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        }
-    };
 
     @Getter
     @Setter
@@ -263,6 +241,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         }
 
         VideoUtils.saveLastUrl(url);
+
+        //自动缓冲，必须是wifi下,或者允许数据流量看视频
+        if (autoPrepare && (VideoUtils.isWifi() || dialogHolder.isPlayWithNotWifi())) {
+            prepareSource();
+        }
 
         return true;
     }
@@ -460,7 +443,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
                 break;
             case VideoState.CURRENT_STATE_PLAYING_BUFFERING:
-                onPrepared();
+                if (!isAutoPrepare()) {
+                    onPrepared();
+                }
                 break;
             case VideoState.CURRENT_STATE_ERROR:
                 break;
@@ -959,7 +944,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
     @Override
     public void requestPrepareSourceData() {
-        if (!VideoUtils.isWifi() && !dialogHolder.isPlayWithNotWifi()) {
+        if (isBuffering()) {
+            onPrepared();
+        } else if (!VideoUtils.isWifi() && !dialogHolder.isPlayWithNotWifi()) {
             dialogHolder.showNotWifiDialog();
         } else {
             prepareSource();
@@ -1026,13 +1013,13 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      */
     public void release() {
         mAudioManager.abandonAudioFocus(onAudioFocusChangeListener);
+        VideoUtils.clearSavedAutoPause(url);
         playerCore.release();
         dialogHolder = null;
         mAudioManager = null;
         url = null;
         onAudioFocusChangeListener = null;
         objects = null;
-        sensorEventListener = null;
         playEventListener = null;
         videoPreview = null;
     }
@@ -1048,6 +1035,17 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
             return videoPreview.getPreview();
         }
         return null;
+    }
+
+    /**
+     * 设置是否使用预览
+     *
+     * @param show
+     */
+    public void setShowPreview(boolean show) {
+        if (videoPreview != null) {
+            videoPreview.setShowPreview(show);
+        }
     }
 
     /**

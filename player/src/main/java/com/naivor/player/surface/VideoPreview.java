@@ -42,7 +42,7 @@ import lombok.Setter;
 public class VideoPreview {
     @Getter
     @Setter
-    protected boolean usePreview = true;  //默认使用预览
+    protected boolean showPreview = true;  //默认使用预览
     @Getter
     @Setter
     protected Bitmap defaultPreview;
@@ -78,7 +78,7 @@ public class VideoPreview {
         }
 
         // Display artwork if enabled and available, else hide it.
-        if (usePreview) {
+        if (showPreview) {
             for (int i = 0; i < selections.length; i++) {
                 TrackSelection selection = selections.get(i);
                 if (selection != null) {

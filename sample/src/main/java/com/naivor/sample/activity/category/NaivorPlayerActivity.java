@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.bumptech.glide.Glide;
 import com.naivor.player.VideoPlayer;
 import com.naivor.player.constant.ScreenState;
 import com.naivor.sample.R;
@@ -26,6 +27,8 @@ import timber.log.Timber;
  * NaivorPlayer 的使用例子
  */
 public class NaivorPlayerActivity extends AppCompatActivity {
+
+    private String string = "http://desk.fd.zol-img.com.cn/t_s960x600c5/g5/M00/0F/08/ChMkJlauzISIH0uXAARUHuJLVX8AAH8-gHu6zsABFQ2166.jpg";
 
     @BindView(R.id.videoPlayer)
     VideoPlayer videoPlayer;
@@ -56,7 +59,19 @@ public class NaivorPlayerActivity extends AppCompatActivity {
         if (videoUrl != null) {
             Timber.d("测试地址：%s", videoUrl.toString());
 
+            //自动缓冲
+//            videoPlayer.setAutoPrepare(true);
+
+            //加载封面
+            Glide.with(this)
+                    .load(string)
+                    .override(320, 240)
+                    .into(videoPlayer.getPreviewView());
+
+            //设置播放源
             videoPlayer.setUp(videoUrl.getUrl(), ScreenState.SCREEN_LAYOUT_ORIGIN, videoUrl.getName());
+
+            //开始播放
 //            videoPlayer.start();
         }
     }

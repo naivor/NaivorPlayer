@@ -899,7 +899,9 @@ public class ControlView extends FrameLayout implements PlayController, Position
                 case ExoPlayer.STATE_IDLE:
                     return;
                 case ExoPlayer.STATE_BUFFERING:
-                    showBuffering(true);
+                    if (player != null && player.getPlayWhenReady()) {
+                        showBuffering(true);
+                    }
                     break;
                 case ExoPlayer.STATE_READY:
                     showBuffering(false);

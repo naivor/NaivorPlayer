@@ -57,6 +57,11 @@ dependencies {
 
     compile rootProject.ext.dependencies.adapter
 
+    compile rootProject.ext.dependencies.okhttp3
+
+    compile rootProject.ext.dependencies.glide
+    compile rootProject.ext.dependencies.glideOkhttp3
+
     debugCompile rootProject.ext.dependencies.leakcanary_debug
     releaseCompile rootProject.ext.dependencies.leakcanary_release
 
