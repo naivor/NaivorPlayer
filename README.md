@@ -64,6 +64,31 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 
 
 
+## **效果**
+
+* 正常
+
+  ​				![normal_play](https://github.com/naivor/NaivorPlayer/blob/master/doc/normal_play.gif)
+
+* 全屏
+
+  * 横屏
+
+    ​			![normal_play](https://github.com/naivor/NaivorPlayer/blob/master/doc/full_screen_landscap.gif)
+
+  * 竖屏
+
+    ​			![normal_play](https://github.com/naivor/NaivorPlayer/blob/master/doc/full_screen_portrait.gif)
+
+* 小窗
+
+  ​				![normal_play](https://github.com/naivor/NaivorPlayer/blob/master/doc/tiny_screen.gif)
+
+
+
+
+
+
 ## **结构**
 
 来一张截图吧，就不放UML了，大家有兴趣就自己看源码吧
