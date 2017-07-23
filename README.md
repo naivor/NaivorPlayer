@@ -1,4 +1,8 @@
  ![naivorplayer_cover](https://github.com/naivor/NaivorPlayer/blob/master/doc/naivorplayer_cover.png)
+
+![palform](https://img.shields.io/badge/palform-android-orange.svg)    ![luanguage](https://img.shields.io/badge/luanguage-java-09BCA4.svg)   [![Build Status](https://travis-ci.org/naivor/NaivorPlayer.svg?branch=master)](https://travis-ci.org/naivor/NaivorPlayer)    ![release](https://img.shields.io/badge/release-1.0.1-green.svg)     [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)     ![license](https://img.shields.io/badge/license-Apache%202.0-BC0962.svg)      ![author](https://img.shields.io/badge/%E4%BD%9C%E8%80%85-naivor-blue.svg)
+
+
 ## **简介**
 
 NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer进行封装，提供美观的操作界面和简单易用调用接口，其界面参考 [**JieCaoVideoPlayer**](https://github.com/lipangit/JieCaoVideoPlayer) ,设计时方法和属性多采用protect，便于扩展，支持多种视频播放格式（ MP4, M4A, FMP4, WebM, MKV, MP3, Ogg, WAV, MPEG-TS, MPEG-PS, FLV 和 ADTS (AAC)，以及DASH，HLS）。
@@ -130,7 +134,7 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 
 
 
- ## Copyright
+ ## License
 
 ```
  Copyright (c) 2017. Naivor.All rights reserved.
