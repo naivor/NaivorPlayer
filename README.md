@@ -27,8 +27,8 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 3. 设置播放的url
 
    ```
-    //设置播放源
-   videoPlayer.setUp(videoUrl.getUrl(),ScreenState.SCREEN_LAYOUT_ORIGIN,videoUrl.getName());
+    //设置播放源
+   videoPlayer.setUp(url,ScreenState.SCREEN_LAYOUT_ORIGIN,"视频名字");
    ```
 
 4. 播放
