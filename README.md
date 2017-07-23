@@ -1,4 +1,4 @@
- ![naivorplayer_cover](/home/naivor/Workspace/Android/NaivorPlayer/doc/naivorplayer_cover.png)
+ ![naivorplayer_cover](https://github.com/naivor/NaivorPlayer/blob/master/doc/naivorplayer_cover.png)
 ## **简介**
 
 NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer进行封装，提供美观的操作界面和简单易用调用接口，其界面参考 [**JieCaoVideoPlayer**](https://github.com/lipangit/JieCaoVideoPlayer) ,设计时方法和属性多采用protect，便于扩展，支持多种视频播放格式（ MP4, M4A, FMP4, WebM, MKV, MP3, Ogg, WAV, MPEG-TS, MPEG-PS, FLV 和 ADTS (AAC)，以及DASH，HLS）。
@@ -59,14 +59,13 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
       videoPlayer.startWindowTiny();  //退出小窗调用 videoPlayer.backOriginWindow();
      ```
 
-     ​
 
 
 
 ## **结构**
 来一张截图吧，就不放UML了，大家有兴趣就自己看源码吧
 
-![snapchot_struct](/home/naivor/Workspace/Android/NaivorPlayer/doc/snapchot_struct.png)
+![snapchot_struct](https://github.com/naivor/NaivorPlayer/blob/master/doc/snapchot_struct.png)
 
 
 
