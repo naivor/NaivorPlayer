@@ -27,8 +27,8 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 3. 设置播放的url
 
    ```
-    //设置播放源
-   videoPlayer.setUp(url,ScreenState.SCREEN_LAYOUT_ORIGIN,"视频名字");
+      //设置播放源
+      videoPlayer.setUp(url,ScreenState.SCREEN_LAYOUT_ORIGIN,"视频名字");
    ```
 
 4. 播放
@@ -62,7 +62,10 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 
 
 
+
+
 ## **结构**
+
 来一张截图吧，就不放UML了，大家有兴趣就自己看源码吧
 
 ![snapchot_struct](https://github.com/naivor/NaivorPlayer/blob/master/doc/snapchot_struct.png)
