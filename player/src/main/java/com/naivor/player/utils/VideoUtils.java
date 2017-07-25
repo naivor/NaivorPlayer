@@ -342,4 +342,18 @@ public final class VideoUtils {
         }
 
     }
+
+    /**
+     * 保持屏幕常亮
+     *
+     * @param context
+     */
+    public static void keepScreenOn(@lombok.NonNull Context context) {
+        if (context!=null) {
+            AppCompatActivity activity = VideoUtils.getActivity(context);
+            if (activity!=null) {
+                activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }
+        }
+    }
 }

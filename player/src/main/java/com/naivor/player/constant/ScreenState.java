@@ -21,10 +21,6 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_LANDSCAPE;
-import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_PORTRAIT;
-import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_SENSOR;
-
 /**
  * 视图状态，包括窗口和布局
  * <p>
@@ -36,13 +32,14 @@ public final class ScreenState {
     public static final int SCREEN_LAYOUT_ORIGIN = 0;
     public static final int SCREEN_LAYOUT_LIST = 1;
     public static final int SCREEN_WINDOW_FULLSCREEN = 2;
-    public static final int SCREEN_WINDOW_TINY = 3;
+    public static final int SCREEN_WINDOW_FULLSCREEN_LOCK = 3;
+    public static final int SCREEN_WINDOW_TINY = 4;
 
 
     /**
      * 屏幕窗口
      */
-    @IntDef({SCREEN_LAYOUT_ORIGIN, SCREEN_LAYOUT_LIST, SCREEN_WINDOW_FULLSCREEN,
+    @IntDef({SCREEN_LAYOUT_ORIGIN, SCREEN_LAYOUT_LIST, SCREEN_WINDOW_FULLSCREEN, SCREEN_WINDOW_FULLSCREEN_LOCK,
             SCREEN_WINDOW_TINY})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ScreenStateValue {
@@ -70,6 +67,9 @@ public final class ScreenState {
                 break;
             case SCREEN_WINDOW_FULLSCREEN:
                 stateName = "全屏";
+                break;
+            case SCREEN_WINDOW_FULLSCREEN_LOCK:
+                stateName = "全屏锁定";
                 break;
             case SCREEN_WINDOW_TINY:
                 stateName = "小窗";

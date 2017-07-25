@@ -42,7 +42,6 @@ import com.naivor.player.constant.ScreenState;
 import com.naivor.player.constant.VideoState;
 import com.naivor.player.controll.PlayController;
 import com.naivor.player.controll.PositionController;
-import com.naivor.player.core.PlayerCore;
 
 import java.util.Arrays;
 import java.util.Formatter;
@@ -183,19 +182,38 @@ public class ControlView extends FrameLayout implements PlayController, Position
     }
 
     /**
+     * 绑定播放器
+     *
      * @param player
      */
-    public void setPlayer(ExoPlayer player) {
+    public void bindPlayer(ExoPlayer player) {
         if (this.player == player) {
             return;
         }
+
         if (this.player != null) {
             this.player.removeListener(componentListener);
         }
+
         this.player = player;
+
         if (player != null) {
             player.addListener(componentListener);
         }
+
+        updateAll();
+    }
+
+    /**
+     * 解除与播放器的绑定
+     */
+    public void unbindPlayer() {
+        if (player != null) {
+            player.removeListener(componentListener);
+
+            player = null;
+        }
+
         updateAll();
     }
 
@@ -256,6 +274,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
         if (viewHolder != null) {
             viewHolder.showPlayButton(R.drawable.ic_error_selector);
         }
+
     }
 
     /**
@@ -269,6 +288,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
         if (viewHolder != null) {
             viewHolder.showPlayButton(R.drawable.ic_play_selector);
         }
+
     }
 
     /**
@@ -278,7 +298,10 @@ public class ControlView extends FrameLayout implements PlayController, Position
         Timber.d("隐藏控制界面");
 
         if (viewHolder.isShown()) {
-            boolean hidePlayButton = player.getPlayWhenReady() && !shouldHidePlayBtn();
+            boolean hidePlayButton = false;
+            if (player != null) {
+                hidePlayButton = player.getPlayWhenReady() && !shouldHidePlayBtn();
+            }
             viewHolder.hide(hidePlayButton);
             if (onControllViewListener != null) {
                 onControllViewListener.onVisibilityChange(viewHolder.buttomLayout.getVisibility());
@@ -386,10 +409,10 @@ public class ControlView extends FrameLayout implements PlayController, Position
      * 更新导航（广告？）
      */
     protected void updateNavigation() {
-        if (!isBottomVisible() || !isAttachedToWindow) {
+        if (!isBottomVisible() || !isAttachedToWindow || player == null) {
             return;
         }
-        Timeline timeline = player != null ? player.getCurrentTimeline() : null;
+        Timeline timeline = player.getCurrentTimeline();
         boolean haveNonEmptyTimeline = timeline != null && !timeline.isEmpty();
         boolean isSeekable = false;
         if (haveNonEmptyTimeline) {
@@ -489,8 +512,8 @@ public class ControlView extends FrameLayout implements PlayController, Position
             viewHolder.positionView.setText(Util.getStringForTime(formatBuilder, formatter, position));
         }
         if (viewHolder.timeBar != null && !scrubbing) {
-            int progress = (int) (position * 100 / duration);
-            int bufferedProgress = (int) (bufferedPosition * 100 / duration);
+            int progress = duration == 0 ? 0 : (int) (position * 100 / duration);
+            int bufferedProgress = duration == 0 ? 0 : (int) (bufferedPosition * 100 / duration);
 
             Timber.v("更新进度：%s,缓冲进度：%s", progress, bufferedProgress);
 
@@ -552,57 +575,69 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
     @Override
     public void start() {
-        player.setPlayWhenReady(true);
 
         if (onControllViewListener != null) {
             onControllViewListener.requestPrepareSourceData();
+        }
+
+        if (player != null) {
+            player.setPlayWhenReady(true);
         }
     }
 
     @Override
     public void pause() {
-        player.setPlayWhenReady(false);
+        if (player != null) {
+            player.setPlayWhenReady(false);
+        }
     }
 
     @Override
     public void resume() {
-        player.setPlayWhenReady(true);
+        if (player != null) {
+            player.setPlayWhenReady(true);
+        }
     }
 
     @Override
     public void previous() {
-        Timeline timeline = player.getCurrentTimeline();
-        if (timeline.isEmpty()) {
-            return;
-        }
-        int windowIndex = player.getCurrentWindowIndex();
-        timeline.getWindow(windowIndex, window);
-        if (windowIndex > 0 && (player.getCurrentPosition() <= MAX_POSITION_FOR_SEEK_TO_PREVIOUS
-                || (window.isDynamic && !window.isSeekable))) {
-            seekTo(windowIndex - 1, C.TIME_UNSET);
-        } else {
-            seekTo(0);
+        if (player != null) {
+            Timeline timeline = player.getCurrentTimeline();
+            if (timeline.isEmpty()) {
+                return;
+            }
+            int windowIndex = player.getCurrentWindowIndex();
+            timeline.getWindow(windowIndex, window);
+            if (windowIndex > 0 && (player.getCurrentPosition() <= MAX_POSITION_FOR_SEEK_TO_PREVIOUS
+                    || (window.isDynamic && !window.isSeekable))) {
+                seekTo(windowIndex - 1, C.TIME_UNSET);
+            } else {
+                seekTo(0);
+            }
         }
     }
 
     @Override
     public void next() {
-        Timeline timeline = player.getCurrentTimeline();
-        if (timeline.isEmpty()) {
-            return;
-        }
-        int windowIndex = player.getCurrentWindowIndex();
-        if (windowIndex < timeline.getWindowCount() - 1) {
-            seekTo(windowIndex + 1, C.TIME_UNSET);
-        } else if (timeline.getWindow(windowIndex, window, false).isDynamic) {
-            seekTo(windowIndex, C.TIME_UNSET);
+        if (player != null) {
+            Timeline timeline = player.getCurrentTimeline();
+            if (timeline.isEmpty()) {
+                return;
+            }
+            int windowIndex = player.getCurrentWindowIndex();
+            if (windowIndex < timeline.getWindowCount() - 1) {
+                seekTo(windowIndex + 1, C.TIME_UNSET);
+            } else if (timeline.getWindow(windowIndex, window, false).isDynamic) {
+                seekTo(windowIndex, C.TIME_UNSET);
+            }
         }
     }
 
     @Override
     public void stop() {
-
-        player.stop();
+        if (player != null) {
+            player.stop();
+        }
     }
 
     @Override
@@ -627,33 +662,45 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
     @Override
     public void seekTo(long positionMs) {
-        seekTo(player.getCurrentWindowIndex(), positionMs);
+        if (player != null) {
+            seekTo(player.getCurrentWindowIndex(), positionMs);
+        }
     }
 
     @Override
     public void fastward(long millisecond) {
-        if (millisecond <= 0) {
-            return;
+        if (player != null) {
+            if (millisecond <= 0) {
+                return;
+            }
+            seekTo(Math.min(player.getCurrentPosition() + millisecond, player.getDuration()));
         }
-        seekTo(Math.min(player.getCurrentPosition() + millisecond, player.getDuration()));
     }
 
     @Override
     public void backward(long millisecond) {
-        if (millisecond <= 0) {
-            return;
+        if (player != null) {
+            if (millisecond <= 0) {
+                return;
+            }
+            seekTo(Math.max(player.getCurrentPosition() - millisecond, 0));
         }
-        seekTo(Math.max(player.getCurrentPosition() - millisecond, 0));
     }
 
     @Override
     public long getCurrentDuration() {
-        return player.getCurrentPosition();
+        if (player != null) {
+            return player.getCurrentPosition();
+        }
+        return 0L;
     }
 
     @Override
     public long getTotalDuration() {
-        return player.getDuration();
+        if (player != null) {
+            return player.getDuration();
+        }
+        return 0L;
     }
 
     /**
@@ -663,7 +710,9 @@ public class ControlView extends FrameLayout implements PlayController, Position
      * @param positionMs
      */
     protected void seekTo(int windowIndex, long positionMs) {
-        player.seekTo(windowIndex, positionMs);
+        if (player != null) {
+            player.seekTo(windowIndex, positionMs);
+        }
     }
 
     /**
@@ -713,10 +762,6 @@ public class ControlView extends FrameLayout implements PlayController, Position
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
         isAttachedToWindow = true;
-
-        if (player == null) {
-            player = PlayerCore.instance(getContext()).getPlayer();
-        }
 
         if (hideAtMs != C.TIME_UNSET) {
             long delayMs = hideAtMs - SystemClock.uptimeMillis();
@@ -967,26 +1012,24 @@ public class ControlView extends FrameLayout implements PlayController, Position
                 isOrigin = state == VideoState.CURRENT_STATE_ORIGIN;
             }
 
-            if (player != null) {
-                if (viewHolder.playBtn == view) {
-                    if (isOrigin) {
-                        start();
-                    } else if (isComplete) {
-                        rePlay();
-                    } else if (player.getPlayWhenReady()) {
-                        pause();
-                    } else {
-                        if (isPause) {
-                            view.setVisibility(GONE);
-                        }
-
-                        resume();
+            if (viewHolder.playBtn == view) {
+                if (isOrigin) {
+                    start();
+                } else if (isComplete) {
+                    rePlay();
+                } else if (player != null && player.getPlayWhenReady()) {
+                    pause();
+                } else {
+                    if (isPause) {
+                        view.setVisibility(GONE);
                     }
 
-                } else if (viewHolder.fullScreenBtn == view) {
-                    if (onControllViewListener != null) {
-                        onControllViewListener.onFullScreenClick();
-                    }
+                    resume();
+                }
+
+            } else if (viewHolder.fullScreenBtn == view) {
+                if (onControllViewListener != null) {
+                    onControllViewListener.onFullScreenClick();
                 }
             }
 

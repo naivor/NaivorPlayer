@@ -50,12 +50,12 @@ public class VideoPreview {
     protected ImageView preview;
     protected AspectRatioFrameLayout contentFrame;
 
+    @Setter
     protected ExoPlayer player;
 
-    public VideoPreview(AspectRatioFrameLayout contentFrame, ImageView videoPreview, ExoPlayer player) {
+    public VideoPreview(AspectRatioFrameLayout contentFrame, ImageView videoPreview) {
         this.contentFrame = contentFrame;
         this.preview = videoPreview;
-        this.player = player;
 
     }
 

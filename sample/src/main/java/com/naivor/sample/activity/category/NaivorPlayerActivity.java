@@ -69,7 +69,9 @@ public class NaivorPlayerActivity extends AppCompatActivity {
                     .into(videoPlayer.getPreviewView());
 
             //设置播放源
-            videoPlayer.setUp(videoUrl.getUrl(), ScreenState.SCREEN_LAYOUT_ORIGIN, videoUrl.getName());
+            videoPlayer.setUp(videoUrl.getUrl(), videoUrl.getName());
+
+//            videoPlayer.setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
 
             //开始播放
 //            videoPlayer.start();

@@ -34,7 +34,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -51,6 +50,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.upstream.Allocator;
 import com.google.android.exoplayer2.util.Assertions;
+import com.naivor.player.constant.OrientationState;
 import com.naivor.player.constant.ScreenState;
 import com.naivor.player.constant.VideoState;
 import com.naivor.player.controll.VideoController;
@@ -68,6 +68,10 @@ import lombok.Getter;
 import lombok.Setter;
 import timber.log.Timber;
 
+import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_LANDSCAPE;
+import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_PORTRAIT;
+import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_SENSOR;
+
 
 /**
  * 播放器类
@@ -83,6 +87,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     //小窗的宽高 16:9
     public static final int WIDTH_TINY_WINDOW = 224;
     public static final int HEIGHT_TINY_WINDOW = 126;
+
+    protected Context context;
 
     @Getter
     protected AspectRatioFrameLayout contentFrame;
@@ -135,6 +141,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     @Setter
     protected int frameBackground = Color.BLACK;
 
+    @Getter
+    @Setter
+    protected PlayEventListener playEventListener;
+
+
     //监听音频焦点
     protected AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
         @Override
@@ -157,17 +168,16 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     };
 
 
-    @Getter
-    @Setter
-    protected PlayEventListener playEventListener;
-
-
     public VideoPlayer(@NonNull Context context) {
         this(context, null);
     }
 
     public VideoPlayer(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
+    }
+
+    public VideoPlayer(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
 
         init(context);
     }
@@ -177,7 +187,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      *
      * @param context
      */
-    protected void init(Context context) {
+    protected void init(@lombok.NonNull Context context) {
+        this.context = context;
 
         View.inflate(context, getLayoutId(), this);
         //背景
@@ -192,22 +203,17 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
             contentFrame.setResizeMode(resizeMode);
 
-            mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+            mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
             mAudioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC,
                     AudioManager.AUDIOFOCUS_GAIN); //请求音频焦点
 
-            playerCore = PlayerCore.instance(getContext());
-            playerCore.setEventListener(this);
-            playerCore.setLoadControl(this);
-            playerCore.setVideoListener(this);
+            dialogHolder = new DialogHolder(context, this);
 
-            dialogHolder = new DialogHolder(getContext(), this);
-
-            controlView.setPlayer(playerCore.getPlayer());
             controlView.setOnControllViewListener(this);
 
-            videoPreview = new VideoPreview(contentFrame, (ImageView) findViewById(R.id.iv_artwork),
-                    playerCore.getPlayer());
+            videoPreview = new VideoPreview(contentFrame, (ImageView) findViewById(R.id.iv_artwork));
+
+            normalOrientation = VideoUtils.getActivity(context).getResources().getConfiguration().orientation;
         }
     }
 
@@ -221,18 +227,16 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      * 设置
      *
      * @param url
-     * @param screen
      * @param objects
      */
     @Override
-    public boolean setUp(String url, @ScreenState.ScreenStateValue int screen, Object... objects) {
+    public boolean setUp(String url, Object... objects) {
 
         if (!TextUtils.isEmpty(this.url) && TextUtils.equals(this.url, url)) {
             return false;
         }
         this.url = url;
         this.objects = objects;
-        this.screenState = screen;
 
         setVideoState(VideoState.CURRENT_STATE_ORIGIN);
 
@@ -263,9 +267,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         boolean setUp = setUp(url, ScreenState.SCREEN_WINDOW_FULLSCREEN, objects);
 
         if (setUp) {
-            startWindowFullscreen();
-
-            start();
+            setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
         }
 
     }
@@ -275,20 +277,54 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      */
     @Override
     public void prepareSource() {
-        if (playerCore != null) {
-            Timber.d("准备播放");
-            initTextureView();
-            addTextureView();
-            VideoUtils.getActivity(getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        Timber.d("准备播放源");
 
-            playerCore.setMediaSource(SourceUtils.buildMediaSource(getContext(), Uri.parse(url)));
+        preparePlayer();
 
-            setVideoState(VideoState.CURRENT_STATE_PREPARING);
+        VideoUtils.keepScreenOn(context);
 
-            playerCore.prepare();
+        playerCore.setMediaSource(SourceUtils.buildMediaSource(context, Uri.parse(url)));
 
-        }
+        setVideoState(VideoState.CURRENT_STATE_PREPARING);
+
+        playerCore.prepare();
+
     }
+
+    /**
+     * 准备播放器，注册监听
+     */
+    protected void preparePlayer() {
+        Timber.d("准备播放器");
+
+        playerCore = PlayerCore.instance(context);
+
+        SimpleExoPlayer player = playerCore.getPlayer();
+        controlView.bindPlayer(player);
+        videoPreview.setPlayer(player);
+
+        playerCore.setEventListener(this);
+        playerCore.setLoadControl(this);
+        playerCore.setVideoListener(this);
+
+        initTextureView();
+        addTextureView();
+    }
+
+    /**
+     * 反注册监听
+     */
+    protected void unRegisterListener() {
+        Timber.d("反注册监听");
+
+        playerCore.setEventListener(null);
+        playerCore.setLoadControl(null);
+        playerCore.setVideoListener(null);
+
+        controlView.unbindPlayer();
+        videoPreview.setPlayer(null);
+    }
+
 
     /**
      * 初始化 TextureView
@@ -299,7 +335,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         removeTextureView();
 
         if (playerCore != null) {
-            playerCore.setSurfaceView(new TextureView(getContext()));
+            playerCore.setSurfaceView(new TextureView(context));
         }
     }
 
@@ -341,12 +377,16 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
     @Override
     public void pause() {
-        controlView.pause();
+        if (videoState == VideoState.CURRENT_STATE_PLAYING) {
+            controlView.pause();
+        }
     }
 
     @Override
     public void resume() {
-        controlView.resume();
+        if (videoState == VideoState.CURRENT_STATE_PAUSE) {
+            controlView.resume();
+        }
     }
 
     @Override
@@ -396,9 +436,23 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
 
     @Override
-    public void setOrientation(int windowType, int orientation) {
+    public void setFullScreenOrientation(@OrientationState.OrientationVlaue int orientation) {
+        switch (orientation) {
+            case ORIENTATION_TYPE_SENSOR:
+                fullscreenOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR;
+                break;
+            case ORIENTATION_TYPE_PORTRAIT:
+                fullscreenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+                break;
+            case ORIENTATION_TYPE_LANDSCAPE:
+                fullscreenOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+                break;
 
+            default:
+                break;
+        }
     }
+
 
     @Override
     public boolean isPlaying() {
@@ -448,9 +502,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
                 }
                 break;
             case VideoState.CURRENT_STATE_ERROR:
+                unRegisterListener();
                 break;
             case VideoState.CURRENT_STATE_COMPLETE:
                 backPress();
+                unRegisterListener();
                 VideoUtils.clearSavedProgress(url);
                 break;
             default:
@@ -493,7 +549,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
                 break;
             case ScreenState.SCREEN_WINDOW_FULLSCREEN:
-
+                startWindowFullscreen(false);
+                break;
+            case ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK:
+                startWindowFullscreen(true);
                 break;
             case ScreenState.SCREEN_WINDOW_TINY:
 
@@ -593,39 +652,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     }
 
     /**
-     * 重力感应的时候调用,自动全屏
-     *
-     * @param x
-     */
-    public void autoFullscreen(float x) {
-        if (videoState == VideoState.CURRENT_STATE_PLAYING
-                && screenState != ScreenState.SCREEN_WINDOW_FULLSCREEN
-                && screenState != ScreenState.SCREEN_WINDOW_TINY) {
-            if (x > 0) {
-                VideoUtils.getActivity(getContext()).setRequestedOrientation(
-                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-            } else {
-                VideoUtils.getActivity(getContext()).setRequestedOrientation(
-                        ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
-            }
-            startWindowFullscreen();
-        }
-    }
-
-    /**
-     * 重力感应的时候调用,自动退出全屏
-     */
-    public void autoQuitFullscreen() {
-        if ((System.currentTimeMillis() - lastAutoFullscreenTime) > 2000
-                && videoState == VideoState.CURRENT_STATE_PLAYING
-                && screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
-            lastAutoFullscreenTime = System.currentTimeMillis();
-            backPress();
-        }
-    }
-
-
-    /**
      * 返回按钮按下
      *
      * @return
@@ -652,16 +678,16 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      * 全屏播放
      */
     @Override
-    public void startWindowFullscreen() {
+    public void startWindowFullscreen(boolean lockFullScreen) {
         Timber.i("全屏播放");
 
-        if (screenState != ScreenState.SCREEN_WINDOW_FULLSCREEN) {
+        if (screenState != ScreenState.SCREEN_WINDOW_FULLSCREEN && screenState != ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {
 
             ViewParent viewParent = getParent();
 
             if (parent == null && viewParent != null) {
 
-                ViewGroup vp = (ViewGroup) (VideoUtils.getActivity(getContext()))  //加入contentView
+                ViewGroup vp = (ViewGroup) (VideoUtils.getActivity(context))  //加入contentView
                         .findViewById(Window.ID_ANDROID_CONTENT);
 
                 if (viewParent != vp) {
@@ -678,10 +704,14 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
                     vp.addView(this, lp);
 
-                    VideoUtils.getActivity(getContext()).setRequestedOrientation(fullscreenOrientation);
-                    VideoUtils.showSupportActionBar(getContext(), false);
+                    VideoUtils.getActivity(context).setRequestedOrientation(fullscreenOrientation);
+                    VideoUtils.showSupportActionBar(context, false);
 
-                    setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN);
+                    if (lockFullScreen) {
+                        setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
+                    } else {
+                        setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN);
+                    }
 
                     resume();
 
@@ -700,7 +730,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     public void startWindowTiny() {
         Timber.i("小窗播放");
 
-        if (screenState != ScreenState.SCREEN_WINDOW_TINY) {
+        if (screenState != ScreenState.SCREEN_WINDOW_TINY && screenState != ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {
 
             if (videoState == VideoState.CURRENT_STATE_ORIGIN || videoState == VideoState.CURRENT_STATE_ERROR) {
                 return;
@@ -710,7 +740,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
             if (parent == null && viewParent != null) {
 
-                ViewGroup vp = (ViewGroup) (VideoUtils.getActivity(getContext()))
+                ViewGroup vp = (ViewGroup) (VideoUtils.getActivity(context))
                         .findViewById(Window.ID_ANDROID_CONTENT);
 
                 if (viewParent != vp) {
@@ -744,6 +774,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
      */
     @Override
     public boolean backOriginWindow() {
+
         return backOriginWindow(true);
     }
 
@@ -764,8 +795,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
 
                 parent.addView(this, indexInParent, parentLayoutParams);
 
-                VideoUtils.getActivity(getContext()).setRequestedOrientation(normalOrientation);
-                VideoUtils.showSupportActionBar(getContext(), true);
+                VideoUtils.getActivity(context).setRequestedOrientation(normalOrientation);
+                VideoUtils.showSupportActionBar(context, true);
 
                 setScreenState(ScreenState.SCREEN_LAYOUT_ORIGIN);
                 onTouchScreenEnd();
@@ -857,7 +888,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
         int id = view.getId();
         if (id == R.id.iv_back) {
             if (!backPress()) {
-                VideoUtils.getActivity(getContext()).onBackPressed();
+                VideoUtils.getActivity(context).onBackPressed();
             }
         } else if (id == R.id.iv_tiny_exit) {
             backOriginWindow();
@@ -869,7 +900,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     @Override
     public void onFullScreenClick() {
         if (screenState == ScreenState.SCREEN_LAYOUT_ORIGIN) {
-            startWindowFullscreen();
+            startWindowFullscreen(false);
         } else if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
             backPress();
         }
@@ -907,7 +938,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener,
     public void changeBrightness(float offset, float brightnessStep) {
         Timber.d("changeBrightness:%s,%s", offset, brightnessStep);
 
-        int brightnessPercent = VideoUtils.caculateBrightness(getContext(), offset, brightnessStep);
+        int brightnessPercent = VideoUtils.caculateBrightness(context, offset, brightnessStep);
 
         dialogHolder.showBrightnessDialog(brightnessPercent);
     }

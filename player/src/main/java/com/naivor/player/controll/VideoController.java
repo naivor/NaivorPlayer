@@ -28,15 +28,13 @@ import com.naivor.player.constant.VideoState;
 
 public interface VideoController extends PositionController, PlayController {
 
-
     /**
      * 设置视频播放时窗口的方向
      *
-     * @param windowType
      * @param orientation
      */
-    void setOrientation(@ScreenState.ScreenStateValue int windowType,
-                        @OrientationState.OrientationVlaue int orientation);
+    void setFullScreenOrientation(
+            @OrientationState.OrientationVlaue int orientation);
 
 
     /**
@@ -69,11 +67,10 @@ public interface VideoController extends PositionController, PlayController {
 
     /**
      * @param url
-     * @param screen
      * @param objects
      * @return
      */
-    boolean setUp(String url, @ScreenState.ScreenStateValue int screen, Object... objects);
+    boolean setUp(String url, Object... objects);
 
     /**
      * 直接全屏播放
@@ -110,7 +107,7 @@ public interface VideoController extends PositionController, PlayController {
     /**
      * 全屏播放
      */
-    void startWindowFullscreen();
+    void startWindowFullscreen(boolean lockFullScreen);
 
     /**
      * 小窗播放

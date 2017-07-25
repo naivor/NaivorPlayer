@@ -60,7 +60,8 @@ public class ControlViewHolder {
     protected Button tinyCloseBtn;
 
     //屏幕状态
-    protected @ScreenState.ScreenStateValue
+    protected
+    @ScreenState.ScreenStateValue
     int state;
 
     public ControlViewHolder(@NonNull View rootView) {
@@ -113,7 +114,9 @@ public class ControlViewHolder {
         Timber.d("显示");
 
         if (topLayout != null) {
-            if (state == ScreenState.SCREEN_WINDOW_FULLSCREEN) {  //全屏显示标题栏
+            if (state == ScreenState.SCREEN_WINDOW_FULLSCREEN ||
+                    state == ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {  //全屏显示标题栏
+
                 topLayout.setVisibility(View.VISIBLE);
 
                 if (llTitle != null) {
@@ -241,11 +244,16 @@ public class ControlViewHolder {
         this.state = state;
 
         if (fullScreenBtn != null) {
-            fullScreenBtn.setVisibility(View.VISIBLE);
-            if (state == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
-                fullScreenBtn.setBackgroundResource(R.drawable.ic_fullscreen_exit_selector);
+            if (state == ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {
+                fullScreenBtn.setVisibility(View.GONE);
             } else {
-                fullScreenBtn.setBackgroundResource(R.drawable.ic_fullscreen_selector);
+                fullScreenBtn.setVisibility(View.VISIBLE);
+
+                if (state == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
+                    fullScreenBtn.setBackgroundResource(R.drawable.ic_fullscreen_exit_selector);
+                } else {
+                    fullScreenBtn.setBackgroundResource(R.drawable.ic_fullscreen_selector);
+                }
             }
 
             show();

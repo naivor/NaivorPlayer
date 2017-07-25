@@ -6,10 +6,10 @@
     android:layout_height="match_parent"
     tools:context="com.naivor.sample.activity.category.list.ListVideoActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_gravity="center"
-        android:text="尽请期待！"
-        android:layout_height="wrap_content" />
+    <ListView
+        android:id="@+id/lv_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:listSelector="@null" />
 
 </FrameLayout>

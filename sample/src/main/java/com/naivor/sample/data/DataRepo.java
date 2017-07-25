@@ -4,13 +4,12 @@ import android.content.Context;
 
 import com.naivor.sample.R;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 import lombok.NonNull;
-
-import static android.R.attr.versionName;
-import static android.R.attr.x;
 
 /**
  * 数据仓库
@@ -72,6 +71,30 @@ public final class DataRepo {
         }
 
         return new VideoUrl(videoUrls[index], videoNames[index]);
+
+    }
+
+    /**
+     * 获取播放视频
+     *
+     * @return
+     */
+    public List<VideoUrl> getVideoUrls() {
+
+        List<VideoUrl> urls = new ArrayList<>();
+
+        int size = Math.min(videoNames.length, videoUrls.length);
+
+        if (size == 0) {
+            return Collections.emptyList();
+        } else {
+            for (int i = 0; i < size; i++) {
+                urls.add(new VideoUrl(videoUrls[i], videoNames[i]));
+            }
+        }
+
+
+        return urls;
 
     }
 }
