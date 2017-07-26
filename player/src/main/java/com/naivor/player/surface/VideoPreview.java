@@ -17,20 +17,17 @@
 package com.naivor.player.surface;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.metadata.Metadata;
-import com.google.android.exoplayer2.metadata.id3.ApicFrame;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
+import timber.log.Timber;
+
+import static android.R.attr.bitmap;
 
 
 /**
@@ -50,8 +47,6 @@ public class VideoPreview {
     protected ImageView preview;
     protected AspectRatioFrameLayout contentFrame;
 
-    @Setter
-    protected ExoPlayer player;
 
     public VideoPreview(AspectRatioFrameLayout contentFrame, ImageView videoPreview) {
         this.contentFrame = contentFrame;
@@ -60,65 +55,61 @@ public class VideoPreview {
     }
 
     /**
-     * 更新预览
+     * 显示预览
      */
-    public void updatePreview() {
-        if (player == null || preview == null) {
-            return;
-        }
+    public void showPreview(boolean showFirstFrame) {
+        Timber.d("显示预览");
+        if (preview != null && showPreview) {
 
-        TrackSelectionArray selections = player.getCurrentTrackSelections();
-        for (int i = 0; i < selections.length; i++) {
-            if (player.getRendererType(i) == C.TRACK_TYPE_VIDEO && selections.get(i) != null) {
-                // Video enabled so artwork must be hidden. If the shutter is closed, it will be opened in
-                // onRenderedFirstFrame().
-                hidePreview();
-                return;
-            }
-        }
+            if (showFirstFrame) {
+                if (!setPreviewFromBitmap(defaultPreview) && preview.getDrawable() != null) {
+                    preview.setVisibility(View.VISIBLE);
+                } else {
+                    preview.setVisibility(View.VISIBLE);
+                }
+            } else {
 
-        // Display artwork if enabled and available, else hide it.
-        if (showPreview) {
-            for (int i = 0; i < selections.length; i++) {
-                TrackSelection selection = selections.get(i);
-                if (selection != null) {
-                    for (int j = 0; j < selection.length(); j++) {
-                        Metadata metadata = selection.getFormat(j).metadata;
-                        if (metadata != null && setPreviewFromMetadata(metadata)) {
-                            return;
-                        }
-                    }
+                if (preview.getDrawable() != null) {
+                    preview.setVisibility(View.VISIBLE);
+                } else if (!setPreviewFromBitmap(defaultPreview)) {
+                    preview.setVisibility(View.GONE);
                 }
             }
-            if (setPreviewFromBitmap(defaultPreview)) {
-                return;
-            }
         }
-        // Preview disabled or unavailable.
-        hidePreview();
+    }
+
+
+    /**
+     * 隐藏预览
+     */
+    public void hidePreview() {
+        Timber.d("隐藏预览");
+        if (preview != null) {
+            preview.setVisibility(View.GONE);
+        }
     }
 
     /**
-     * @param metadata
-     * @return
+     * 更新预览
      */
-    protected boolean setPreviewFromMetadata(Metadata metadata) {
-        for (int i = 0; i < metadata.length(); i++) {
-            Metadata.Entry metadataEntry = metadata.get(i);
-            if (metadataEntry instanceof ApicFrame) {
-                byte[] bitmapData = ((ApicFrame) metadataEntry).pictureData;
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapData, 0, bitmapData.length);
-                return setPreviewFromBitmap(bitmap);
+    public void updatePreview(@NonNull Bitmap bitmap) {
+        Timber.d("更新预览");
+        if (preview != null && showPreview) {
+            if (defaultPreview == null) {
+                defaultPreview = bitmap;
             }
         }
-        return false;
     }
+
 
     /**
      * @param bitmap
      * @return
      */
     protected boolean setPreviewFromBitmap(Bitmap bitmap) {
+
+        Timber.d("设置 bitmap 到 preview");
+
         if (bitmap != null) {
             int bitmapWidth = bitmap.getWidth();
             int bitmapHeight = bitmap.getHeight();
@@ -134,13 +125,5 @@ public class VideoPreview {
         return false;
     }
 
-    /**
-     * 隐藏预览
-     */
-    public void hidePreview() {
-        if (preview != null) {
-            preview.setImageResource(android.R.color.transparent); // Clears any bitmap reference.
-            preview.setVisibility(View.INVISIBLE);
-        }
-    }
+
 }

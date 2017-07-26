@@ -20,12 +20,14 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import com.bumptech.glide.Glide;
 import com.naivor.adapter.AdapterOperator;
 import com.naivor.adapter.RecyAdapter;
 import com.naivor.adapter.RecyHolder;
 import com.naivor.player.VideoPlayer;
 import com.naivor.player.constant.ScreenState;
 import com.naivor.sample.R;
+import com.naivor.sample.data.DataRepo;
 import com.naivor.sample.data.VideoUrl;
 
 import butterknife.BindView;
@@ -66,6 +68,11 @@ public class VideoRecyclerAdapter extends RecyAdapter<VideoUrl> {
         public void bindData(AdapterOperator<VideoUrl> operator, int position, VideoUrl itemData) {
             super.bindData(operator, position, itemData);
 
+            //加载封面
+            Glide.with(context)
+                    .load(DataRepo.VIDEO_COVER)
+                    .override(320, 240)
+                    .into(videoPlayer.getPreviewView());
             videoPlayer.setScreenState(ScreenState.SCREEN_LAYOUT_LIST);
             videoPlayer.setUp(itemData.getUrl(), itemData.getName());
 

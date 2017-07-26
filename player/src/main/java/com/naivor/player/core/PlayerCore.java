@@ -162,7 +162,7 @@ public final class PlayerCore {
      * 释放资源
      */
     public void release() {
-        if (player!=null){
+        if (player != null) {
             player.release();
         }
 

@@ -244,12 +244,23 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         VideoUtils.saveLastUrl(url);
 
-        //自动缓冲，必须是wifi下,或者允许数据流量看视频
-        if (autoPrepare && (VideoUtils.isWifi() || dialogHolder.isPlayWithNotWifi())) {
+        //自动缓冲，必须是wifi下,或者允许数据流量看视频,不能是视频列表
+        if ((VideoUtils.isWifi() || dialogHolder.isPlayWithNotWifi())
+                && isAutoPrepareEnable()) {
             prepareSource();
         }
 
         return true;
+    }
+
+    /**
+     * 是否自动缓冲可用
+     *
+     * @return
+     */
+    private boolean isAutoPrepareEnable() {
+        return autoPrepare && screenState != ScreenState.SCREEN_LAYOUT_LIST
+                && originScreenState != ScreenState.SCREEN_LAYOUT_LIST;
     }
 
     /**
@@ -301,7 +312,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         SimpleExoPlayer player = playerCore.getPlayer();
         controlView.setPlayer(player);
-        videoPreview.setPlayer(player);
 
         playerCore.setEventListener(this);
         playerCore.setLoadControl(this);
@@ -331,8 +341,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         playerCore.setEventListener(null);
         playerCore.setLoadControl(null);
         playerCore.setVideoListener(null);
-
-        videoPreview.setPlayer(null);
 
         if (mAudioManager != null) {
             mAudioManager.abandonAudioFocus(onAudioFocusChangeListener);
@@ -498,14 +506,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     public void setVideoState(@VideoState.VideoStateValue int state) {
         Timber.d("改变当前播放状态:%s", VideoState.getVideoStateName(state));
 
-        controlView.updateVideoState(state);
 
         switch (state) {
             case VideoState.CURRENT_STATE_ORIGIN:
-
-//                if (!VideoUtils.isViewInScreen(this)) {
-//                    notifyNewVideo();
-//                }
 
                 break;
             case VideoState.CURRENT_STATE_PREPARING:
@@ -518,7 +521,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
                 break;
             case VideoState.CURRENT_STATE_PLAYING_BUFFERING:
-                if (!isAutoPrepare()) {
+                if (!autoPrepare) {
                     onPrepared();
                 }
                 break;
@@ -541,14 +544,33 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         if (playEventListener != null) {
             playEventListener.onVideoState(state);
         }
+
+        //显示预览
+        if (state == VideoState.CURRENT_STATE_ORIGIN || state == VideoState.CURRENT_STATE_COMPLETE) {
+            videoPreview.showPreview(isAutoPrepareEnable());
+        } else {
+            videoPreview.hidePreview();
+        }
+
+        //自动缓冲避免显示缓冲状态
+        if (autoPrepare && (state == VideoState.CURRENT_STATE_PREPARING || state == VideoState.CURRENT_STATE_PLAYING_BUFFERING)) {
+
+            SimpleExoPlayer player = PlayerCore.instance(context).getPlayer();
+
+            if (!player.getPlayWhenReady() || screenState == ScreenState.SCREEN_LAYOUT_LIST || originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
+                return;
+            }
+        }
+
+        controlView.updateVideoState(state);
     }
 
     /**
      * 播放新视频
      */
     protected void notifyNewVideo() {
-        if (screenState == ScreenState.SCREEN_LAYOUT_LIST ||
-                originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
+        if (screenState == ScreenState.SCREEN_LAYOUT_LIST
+                || originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
             PlayerCore.instance(context).addListListener(this);
         }
     }
@@ -860,8 +882,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     public void onTimelineChanged(Timeline timeline, Object o) {
         Timber.d("onTimelineChanged");
 
-        videoPreview.updatePreview();
-
         controlView.updateAll();
         controlView.updateTimeBarMode();
     }
@@ -869,6 +889,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     @Override
     public void onTracksChanged(TrackGroupArray trackGroupArray, TrackSelectionArray trackSelectionArray) {
         Timber.d("onTracksChanged");
+
     }
 
     @Override
@@ -892,7 +913,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         switch (i) {
             case ExoPlayer.STATE_IDLE:
-                if (videoState != VideoState.CURRENT_STATE_ORIGIN) {
+                if (videoState != VideoState.CURRENT_STATE_ORIGIN
+                        && videoState != VideoState.CURRENT_STATE_ERROR) {
                     setVideoState(VideoState.CURRENT_STATE_ORIGIN);
                 }
                 break;
@@ -1050,7 +1072,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
     @Override
     public void onRenderedFirstFrame() {
-
+        View view = PlayerCore.instance(context).getSurfaceView();
+        if (view != null && view instanceof TextureView) {
+            videoPreview.updatePreview(((TextureView) view).getBitmap());
+        }
     }
 
     /**

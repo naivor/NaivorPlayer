@@ -28,8 +28,6 @@ import timber.log.Timber;
  */
 public class NaivorPlayerActivity extends AppCompatActivity {
 
-    private String string = "http://desk.fd.zol-img.com.cn/t_s960x600c5/g5/M00/0F/08/ChMkJlauzISIH0uXAARUHuJLVX8AAH8-gHu6zsABFQ2166.jpg";
-
     @BindView(R.id.videoPlayer)
     VideoPlayer videoPlayer;
     @BindView(R.id.btn_tiny)
@@ -64,7 +62,7 @@ public class NaivorPlayerActivity extends AppCompatActivity {
 
             //加载封面
             Glide.with(this)
-                    .load(string)
+                    .load(DataRepo.VIDEO_COVER)
                     .override(320, 240)
                     .into(videoPlayer.getPreviewView());
 

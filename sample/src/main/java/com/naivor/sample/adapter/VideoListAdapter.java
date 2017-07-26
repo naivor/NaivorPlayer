@@ -19,12 +19,14 @@ package com.naivor.sample.adapter;
 import android.content.Context;
 import android.view.View;
 
+import com.bumptech.glide.Glide;
 import com.naivor.adapter.AdapterOperator;
 import com.naivor.adapter.ListAdapter;
 import com.naivor.adapter.ListHolder;
 import com.naivor.player.VideoPlayer;
 import com.naivor.player.constant.ScreenState;
 import com.naivor.sample.R;
+import com.naivor.sample.data.DataRepo;
 import com.naivor.sample.data.VideoUrl;
 
 import butterknife.BindView;
@@ -66,8 +68,13 @@ public class VideoListAdapter extends ListAdapter<VideoUrl> {
         public void bindData(AdapterOperator<VideoUrl> operator, int position, VideoUrl itemData) {
             super.bindData(operator, position, itemData);
 
+            //加载封面
+            Glide.with(context)
+                    .load(DataRepo.VIDEO_COVER)
+                    .override(320, 240)
+                    .into(videoPlayer.getPreviewView());
             videoPlayer.setScreenState(ScreenState.SCREEN_LAYOUT_LIST);
-            videoPlayer.setUp(itemData.getUrl(),itemData.getName());
+            videoPlayer.setUp(itemData.getUrl(), itemData.getName());
 
         }
     }

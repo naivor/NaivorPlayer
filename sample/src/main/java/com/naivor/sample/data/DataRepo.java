@@ -18,6 +18,7 @@ import lombok.NonNull;
  */
 
 public final class DataRepo {
+    public static final String VIDEO_COVER = "http://desk.fd.zol-img.com.cn/t_s960x600c5/g5/M00/0F/08/ChMkJlauzISIH0uXAARUHuJLVX8AAH8-gHu6zsABFQ2166.jpg";
 
     private Context context;
 
