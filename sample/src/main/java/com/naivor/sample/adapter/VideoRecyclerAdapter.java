@@ -66,7 +66,8 @@ public class VideoRecyclerAdapter extends RecyAdapter<VideoUrl> {
         public void bindData(AdapterOperator<VideoUrl> operator, int position, VideoUrl itemData) {
             super.bindData(operator, position, itemData);
 
-            videoPlayer.setUp(itemData.getUrl(), ScreenState.SCREEN_LAYOUT_LIST, itemData.getName());
+            videoPlayer.setScreenState(ScreenState.SCREEN_LAYOUT_LIST);
+            videoPlayer.setUp(itemData.getUrl(), itemData.getName());
 
         }
     }

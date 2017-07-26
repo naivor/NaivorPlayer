@@ -31,6 +31,9 @@ import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import lombok.NonNull;
 
 /**
@@ -60,6 +63,8 @@ public final class PlayerCore {
 
     private static PlayerCore playerCore;
 
+    protected Set<VideoLayoutListListener> listListeners;
+
     /**
      * 单例
      *
@@ -82,6 +87,8 @@ public final class PlayerCore {
         this.context = context.getApplicationContext();
 
         createPlayer(this.context);
+
+        listListeners = new HashSet<>();
     }
 
     /**
@@ -98,6 +105,24 @@ public final class PlayerCore {
         player = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, loadControl);
     }
 
+
+    /**
+     * 准备视频
+     */
+    public void addListListener(VideoLayoutListListener listListener) {
+        for (VideoLayoutListListener l : listListeners) {
+            if (l != listListener) {
+                l.onNewVideo();
+
+                release();
+
+                listListeners.remove(l);
+            }
+        }
+
+        listListeners.add(listListener);
+
+    }
 
     /**
      * 准备视频
@@ -137,18 +162,20 @@ public final class PlayerCore {
      * 释放资源
      */
     public void release() {
-        player.release();
+        if (player!=null){
+            player.release();
+        }
 
         player = null;
         renderersFactory = null;
         trackSelector = null;
         loadControl = null;
 
-        eventListener=null;
-        videoListener=null;
+        eventListener = null;
+        videoListener = null;
 
-        surfaceView=null;
-        mediaSource=null;
+        surfaceView = null;
+        mediaSource = null;
 
     }
 

@@ -56,6 +56,8 @@ import static com.google.android.exoplayer2.C.TYPE_SS;
 
 public final class SourceUtils {
 
+    public static Handler mainHandler = new Handler();
+
     private SourceUtils() {
     }
 
@@ -96,7 +98,6 @@ public final class SourceUtils {
 
         DataSource.Factory mediaDataSourceFactory = buildDataSourceFactory(context, true);
 
-        Handler mainHandler = new Handler();
 
         EventLogger eventLogger = null;
         if (BuildConfig.DEBUG) {   //打印调试日志

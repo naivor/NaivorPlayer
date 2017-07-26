@@ -29,12 +29,8 @@ import android.widget.FrameLayout;
 import android.widget.SeekBar;
 
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Util;
 import com.naivor.player.R;
@@ -175,44 +171,16 @@ public class ControlView extends FrameLayout implements PlayController, Position
 
 
     /**
-     * @return
-     */
-    public ExoPlayer getPlayer() {
-        return player;
-    }
-
-    /**
      * 绑定播放器
      *
      * @param player
      */
-    public void bindPlayer(ExoPlayer player) {
+    public void setPlayer(ExoPlayer player) {
         if (this.player == player) {
             return;
         }
 
-        if (this.player != null) {
-            this.player.removeListener(componentListener);
-        }
-
         this.player = player;
-
-        if (player != null) {
-            player.addListener(componentListener);
-        }
-
-        updateAll();
-    }
-
-    /**
-     * 解除与播放器的绑定
-     */
-    public void unbindPlayer() {
-        if (player != null) {
-            player.removeListener(componentListener);
-
-            player = null;
-        }
 
         updateAll();
     }
@@ -252,44 +220,6 @@ public class ControlView extends FrameLayout implements PlayController, Position
         }
     }
 
-    /**
-     * 显示缓冲
-     *
-     * @param isThumb
-     */
-    public void showBuffering(boolean isThumb) {
-        if (viewHolder != null) {
-            viewHolder.showThumb(isThumb);
-        }
-    }
-
-    /**
-     * 显示播放错误
-     */
-    public void onError() {
-        Timber.d("播放出错");
-
-        stop();
-
-        if (viewHolder != null) {
-            viewHolder.showPlayButton(R.drawable.ic_error_selector);
-        }
-
-    }
-
-    /**
-     * 播放完成
-     */
-    public void onComplete() {
-        Timber.d("播放完成");
-
-        stop();
-
-        if (viewHolder != null) {
-            viewHolder.showPlayButton(R.drawable.ic_play_selector);
-        }
-
-    }
 
     /**
      * 隐藏控制界面
@@ -327,15 +257,28 @@ public class ControlView extends FrameLayout implements PlayController, Position
     }
 
     /**
-     * 改变全屏按钮状态
+     * 更新屏幕状态
      *
      * @param state
      */
-    public void setFullBtnState(@ScreenState.ScreenStateValue int state) {
-        Timber.d("改变全屏按钮状态，全屏：%s", state);
+    public void updateScreenState(@ScreenState.ScreenStateValue int state) {
+        Timber.d("更新屏幕状态：%s", ScreenState.getScreenStateName(state));
 
         if (viewHolder != null) {
-            viewHolder.showFullScreenButton(state);
+            viewHolder.updateScreenState(state);
+        }
+    }
+
+    /**
+     * 更新播放状态
+     *
+     * @param state
+     */
+    public void updateVideoState(@VideoState.VideoStateValue int state) {
+        Timber.d("更新播放状态：%s", VideoState.getVideoStateName(state));
+
+        if (viewHolder != null) {
+            viewHolder.updateVideoState(state);
         }
     }
 
@@ -356,39 +299,6 @@ public class ControlView extends FrameLayout implements PlayController, Position
         }
     }
 
-    /**
-     * 全部更新
-     */
-    protected void updateAll() {
-        Timber.d("更新控制界面");
-
-        updatePlayPauseButton();
-        updateNavigation();
-        updateProgress();
-    }
-
-    /**
-     * 播放按钮状态更新
-     */
-    protected void updatePlayPauseButton() {
-
-        Timber.d("更新播放按钮");
-
-        if (!isShown() || !isAttachedToWindow) {
-            return;
-        }
-
-        if (viewHolder.playBtn != null) {
-
-            if (player != null && player.getPlayWhenReady()
-                    && player.getPlaybackState() == ExoPlayer.STATE_READY) {
-                viewHolder.playBtn.setImageResource(R.drawable.ic_pause_selector);
-            } else {
-                viewHolder.playBtn.setImageResource(R.drawable.ic_play_selector);
-            }
-        }
-
-    }
 
     /**
      * 是否播放错误
@@ -406,9 +316,20 @@ public class ControlView extends FrameLayout implements PlayController, Position
     }
 
     /**
+     * 全部更新
+     */
+    public void updateAll() {
+        Timber.d("更新控制界面");
+
+        updateNavigation();
+        updateProgress();
+    }
+
+
+    /**
      * 更新导航（广告？）
      */
-    protected void updateNavigation() {
+    public void updateNavigation() {
         if (!isBottomVisible() || !isAttachedToWindow || player == null) {
             return;
         }
@@ -433,7 +354,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 更新进度条模式
      */
-    protected void updateTimeBarMode() {
+    public void updateTimeBarMode() {
         if (player == null) {
             return;
         }
@@ -444,7 +365,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 更新播放进度
      */
-    protected void updateProgress() {
+    public void updateProgress() {
 
         long position = 0;
         long bufferedPosition = 0;
@@ -926,7 +847,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
     /**
      * 监听器，监听播放事件，点击事件，拖动事件
      */
-    protected final class ComponentListener implements ExoPlayer.EventListener, SeekBar.OnSeekBarChangeListener,
+    protected final class ComponentListener implements SeekBar.OnSeekBarChangeListener,
             OnClickListener {
 
         /**
@@ -935,64 +856,6 @@ public class ControlView extends FrameLayout implements PlayController, Position
          */
         void setAdBreakTimesMs(@Nullable long[] adBreakTimesMs, int adBreakCount) {
 
-        }
-
-        @Override
-        public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-
-            switch (playbackState) {
-                case ExoPlayer.STATE_IDLE:
-                    return;
-                case ExoPlayer.STATE_BUFFERING:
-                    if (player != null && player.getPlayWhenReady()) {
-                        showBuffering(true);
-                    }
-                    break;
-                case ExoPlayer.STATE_READY:
-                    showBuffering(false);
-                    break;
-                case ExoPlayer.STATE_ENDED:
-                    onComplete();
-                    break;
-                default:
-                    break;
-            }
-
-            updatePlayPauseButton();
-            updateProgress();
-        }
-
-        @Override
-        public void onPositionDiscontinuity() {
-            updateNavigation();
-            updateProgress();
-        }
-
-        @Override
-        public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-            // Do nothing.
-        }
-
-        @Override
-        public void onTimelineChanged(Timeline timeline, Object manifest) {
-            updateNavigation();
-            updateTimeBarMode();
-            updateProgress();
-        }
-
-        @Override
-        public void onLoadingChanged(boolean isLoading) {
-            // Do nothing.
-        }
-
-        @Override
-        public void onTracksChanged(TrackGroupArray tracks, TrackSelectionArray selections) {
-            // Do nothing.
-        }
-
-        @Override
-        public void onPlayerError(ExoPlaybackException error) {
-            onError();
         }
 
         @Override
@@ -1019,11 +882,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
                     rePlay();
                 } else if (player != null && player.getPlayWhenReady()) {
                     pause();
-                } else {
-                    if (isPause) {
-                        view.setVisibility(GONE);
-                    }
-
+                } else if (isPause) {
                     resume();
                 }
 

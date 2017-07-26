@@ -29,6 +29,7 @@ import android.widget.TextView;
 
 import com.naivor.player.R;
 import com.naivor.player.constant.ScreenState;
+import com.naivor.player.constant.VideoState;
 
 import lombok.NonNull;
 import timber.log.Timber;
@@ -40,6 +41,10 @@ import timber.log.Timber;
  */
 
 public class ControlViewHolder {
+    public static int RES_VIDEO_PLAY = R.drawable.ic_play_selector;
+    public static int RES_VIDEO_PAUSE = R.drawable.ic_pause_selector;
+    public static int RES_VIDEO_ERROR = R.drawable.ic_error_selector;
+
     protected View rootView;
 
     protected ImageView playBtn;
@@ -59,10 +64,10 @@ public class ControlViewHolder {
     protected Button tinyExitBtn;
     protected Button tinyCloseBtn;
 
-    //屏幕状态
-    protected
+    @VideoState.VideoStateValue
+    protected int videoState;
     @ScreenState.ScreenStateValue
-    int state;
+    protected int screenState;
 
     public ControlViewHolder(@NonNull View rootView) {
         this.rootView = rootView;
@@ -84,6 +89,74 @@ public class ControlViewHolder {
         tinyExitBtn = rootView.findViewById(R.id.iv_tiny_exit);
         tinyCloseBtn = rootView.findViewById(R.id.iv_tiny_close);
 
+    }
+
+    /**
+     * 更新播放状态
+     *
+     * @param videoState
+     */
+    public void updateVideoState(@ScreenState.ScreenStateValue int videoState) {
+        this.videoState = videoState;
+
+        switch (videoState) {
+            case VideoState.CURRENT_STATE_ORIGIN:
+                reset();
+                showPlayButton(RES_VIDEO_PLAY);
+                break;
+            case VideoState.CURRENT_STATE_PREPARING:
+                showThumb(true);
+                break;
+            case VideoState.CURRENT_STATE_PLAYING:
+                showPlayButton(RES_VIDEO_PAUSE);
+                showThumb(false);
+                if (!isShown()) {
+                    hide(true);
+                }
+                break;
+            case VideoState.CURRENT_STATE_PAUSE:
+                showPlayButton(RES_VIDEO_PLAY);
+                showThumb(false);
+                break;
+            case VideoState.CURRENT_STATE_PLAYING_BUFFERING:
+                showThumb(true);
+                break;
+            case VideoState.CURRENT_STATE_ERROR:
+                reset();
+                showPlayButton(RES_VIDEO_ERROR);
+                break;
+            case VideoState.CURRENT_STATE_COMPLETE:
+                reset();
+                showPlayButton(RES_VIDEO_PLAY);
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    /**
+     * 更新屏幕状态
+     *
+     * @param screenState
+     */
+    public void updateScreenState(@ScreenState.ScreenStateValue int screenState) {
+        this.screenState = screenState;
+
+        if (fullScreenBtn != null) {
+            if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {
+                fullScreenBtn.setVisibility(View.GONE);
+            } else {
+                fullScreenBtn.setVisibility(View.VISIBLE);
+
+                if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
+                    fullScreenBtn.setBackgroundResource(R.drawable.ic_fullscreen_exit_selector);
+                } else {
+                    fullScreenBtn.setBackgroundResource(R.drawable.ic_fullscreen_selector);
+                }
+            }
+
+        }
     }
 
     /**
@@ -114,8 +187,8 @@ public class ControlViewHolder {
         Timber.d("显示");
 
         if (topLayout != null) {
-            if (state == ScreenState.SCREEN_WINDOW_FULLSCREEN ||
-                    state == ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {  //全屏显示标题栏
+            if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN ||
+                    screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {  //全屏显示标题栏
 
                 topLayout.setVisibility(View.VISIBLE);
 
@@ -125,7 +198,7 @@ public class ControlViewHolder {
                 if (rlTiny != null) {
                     rlTiny.setVisibility(View.GONE);
                 }
-            } else if (state == ScreenState.SCREEN_WINDOW_TINY) {  //小窗显示标题栏
+            } else if (screenState == ScreenState.SCREEN_WINDOW_TINY) {  //小窗显示标题栏
                 topLayout.setVisibility(View.VISIBLE);
                 if (llTitle != null) {
                     llTitle.setVisibility(View.GONE);
@@ -140,7 +213,7 @@ public class ControlViewHolder {
         }
 
         if (buttomLayout != null) {
-            if (state == ScreenState.SCREEN_WINDOW_TINY) {  //小窗隐藏底部控制栏
+            if (screenState == ScreenState.SCREEN_WINDOW_TINY) {  //小窗隐藏底部控制栏
                 buttomLayout.setVisibility(View.GONE);
             } else {
                 buttomLayout.setVisibility(View.VISIBLE);
@@ -199,7 +272,7 @@ public class ControlViewHolder {
      *
      * @param isThumb
      */
-    public void showThumb(boolean isThumb) {
+    protected void showThumb(boolean isThumb) {
 
         Timber.d("缓冲：%s", isThumb);
 
@@ -221,7 +294,7 @@ public class ControlViewHolder {
     /**
      * 重置播放按钮
      */
-    public void showPlayButton(@DrawableRes int res) {
+    protected void showPlayButton(@DrawableRes int res) {
 
         if (thumbBar != null) {
             thumbBar.setVisibility(View.GONE);
@@ -235,29 +308,20 @@ public class ControlViewHolder {
         }
     }
 
+
     /**
-     * 重置全屏按钮
-     *
-     * @param state
+     * 重置
      */
-    public void showFullScreenButton(@ScreenState.ScreenStateValue int state) {
-        this.state = state;
+    protected void reset() {
+        if (isShown()) {
 
-        if (fullScreenBtn != null) {
-            if (state == ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {
-                fullScreenBtn.setVisibility(View.GONE);
-            } else {
-                fullScreenBtn.setVisibility(View.VISIBLE);
+            hide(false);
 
-                if (state == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
-                    fullScreenBtn.setBackgroundResource(R.drawable.ic_fullscreen_exit_selector);
-                } else {
-                    fullScreenBtn.setBackgroundResource(R.drawable.ic_fullscreen_selector);
-                }
+            showThumb(false);
+
+            if (timeBar != null) {
+                timeBar.setProgress(0);
             }
-
-            show();
         }
     }
-
 }

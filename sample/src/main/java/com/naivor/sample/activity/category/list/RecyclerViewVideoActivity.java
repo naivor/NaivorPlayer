@@ -10,6 +10,7 @@ import android.view.MenuItem;
 
 import com.naivor.sample.R;
 import com.naivor.sample.adapter.VideoRecyclerAdapter;
+import com.naivor.sample.data.DataRepo;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -47,7 +48,7 @@ public class RecyclerViewVideoActivity extends AppCompatActivity {
         recyclerAdapter = new VideoRecyclerAdapter(context);
         rvContent.setAdapter(recyclerAdapter);
 
-//        recyclerAdapter.setItems(DataRepo.get(context).getVideoUrls());
+        recyclerAdapter.setItems(DataRepo.get(context).getVideoUrls());
 
     }
 

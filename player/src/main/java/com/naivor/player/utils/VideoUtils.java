@@ -17,6 +17,8 @@
 package com.naivor.player.utils;
 
 import android.content.Context;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -25,8 +27,8 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ContextThemeWrapper;
 import android.text.TextUtils;
+import android.view.View;
 import android.view.WindowManager;
-
 
 import java.util.Formatter;
 import java.util.Locale;
@@ -58,13 +60,41 @@ public final class VideoUtils {
         return Utils.context().getResources().getDisplayMetrics().density;
     }
 
+    /**
+     * 判断view是否在屏幕内
+     *
+     * @param view
+     */
+    public static boolean isViewInScreen(@NonNull View view) {
+        AppCompatActivity activity = getActivity(view.getContext());
+
+        if (activity != null) {
+            Point p = new Point();
+            activity.getWindowManager().getDefaultDisplay().getSize(p);
+            int screenWidth = p.x;
+            int screenHeight = p.y;
+
+            Rect rect = new Rect(0, 0, screenWidth, screenHeight);
+            int[] location = new int[2];
+            view.getLocationInWindow(location);
+            if (view.getGlobalVisibleRect(rect)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
 
     /**
      * 将dp转换成px
      *
-     * @param dp      dp值
+     * @param dp dp值
      * @return px的值
      */
+
     public static int dp2px(float dp) {
         return (int) (getScreenDensity() * dp + 0.5f);
     }
@@ -349,9 +379,9 @@ public final class VideoUtils {
      * @param context
      */
     public static void keepScreenOn(@lombok.NonNull Context context) {
-        if (context!=null) {
+        if (context != null) {
             AppCompatActivity activity = VideoUtils.getActivity(context);
-            if (activity!=null) {
+            if (activity != null) {
                 activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             }
         }

@@ -55,8 +55,8 @@ public final class ScreenState {
      * @param state
      * @return
      */
-    public static String getOrientationStateName(@ScreenStateValue int state) {
-        String stateName = null;
+    public static String getScreenStateName(@ScreenStateValue int state) {
+        String stateName = "";
 
         switch (state) {
             case SCREEN_LAYOUT_ORIGIN:

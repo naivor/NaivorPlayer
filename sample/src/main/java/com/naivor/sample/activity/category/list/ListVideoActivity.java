@@ -9,6 +9,7 @@ import android.widget.ListView;
 
 import com.naivor.sample.R;
 import com.naivor.sample.adapter.VideoListAdapter;
+import com.naivor.sample.data.DataRepo;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -45,7 +46,7 @@ public class ListVideoActivity extends AppCompatActivity {
 
         lvContent.setAdapter(listAdapter);
 
-//        listAdapter.setItems(DataRepo.get(context).getVideoUrls());
+        listAdapter.setItems(DataRepo.get(context).getVideoUrls());
     }
 
 
