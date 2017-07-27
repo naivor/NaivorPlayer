@@ -8,6 +8,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.MenuItem;
 
+import com.naivor.player.VideoPlayer;
 import com.naivor.sample.R;
 import com.naivor.sample.adapter.VideoRecyclerAdapter;
 import com.naivor.sample.data.DataRepo;
@@ -43,6 +44,8 @@ public class RecyclerViewVideoActivity extends AppCompatActivity {
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setDisplayUseLogoEnabled(false);
         actionBar.setTitle(getIntent().getStringExtra(EXTRA));
+
+        VideoPlayer.openTinyWhenOutScreen(this);
 
         rvContent.setLayoutManager(new LinearLayoutManager(context));
         recyclerAdapter = new VideoRecyclerAdapter(context);

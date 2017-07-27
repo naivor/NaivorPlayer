@@ -16,8 +16,9 @@
 
 package com.naivor.player.utils;
 
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.Point;
+import android.content.ContextWrapper;
 import android.graphics.Rect;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
@@ -66,25 +67,14 @@ public final class VideoUtils {
      * @param view
      */
     public static boolean isViewInScreen(@NonNull View view) {
-        AppCompatActivity activity = getActivity(view.getContext());
+        Rect rect = new Rect();
+        view.getGlobalVisibleRect(rect);
 
-        if (activity != null) {
-            Point p = new Point();
-            activity.getWindowManager().getDefaultDisplay().getSize(p);
-            int screenWidth = p.x;
-            int screenHeight = p.y;
-
-            Rect rect = new Rect(0, 0, screenWidth, screenHeight);
-            int[] location = new int[2];
-            view.getLocationInWindow(location);
-            if (view.getGlobalVisibleRect(rect)) {
-                return true;
-            } else {
-                return false;
-            }
+        if (rect.top > 0) {       // 可见及部分可见
+            return true;
+        } else {         //全部不可见时为0，不会出现负值
+            return false;
         }
-
-        return false;
     }
 
 
@@ -139,15 +129,19 @@ public final class VideoUtils {
      * @param context
      * @return
      */
-    public static AppCompatActivity getActivity(Context context) {
+    public static Activity getActivity(Context context) {
         if (context == null) {
             return null;
         }
-        if (context instanceof AppCompatActivity) {
-            return (AppCompatActivity) context;
+
+        if (context instanceof Activity) {
+            return (Activity) context;
         } else if (context instanceof ContextThemeWrapper) {
             return getActivity(((ContextThemeWrapper) context).getBaseContext());
+        } else if (context instanceof ContextWrapper) {
+            return getActivity(((ContextWrapper) context).getBaseContext());
         }
+
         return null;
     }
 
@@ -253,39 +247,43 @@ public final class VideoUtils {
     public static int caculateBrightness(@NonNull Context context, float offset, float brightnessStep) {
         float mGestureDownBrightness = 0;
 
-        WindowManager.LayoutParams lp = VideoUtils.getActivity(context).getWindow().getAttributes();
-        if (lp.screenBrightness < 0) {
-            try {
-                mGestureDownBrightness = Settings.System.getInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS) / 255;
-                Timber.i("当前系统亮度：%s", mGestureDownBrightness);
-            } catch (Settings.SettingNotFoundException e) {
-                e.printStackTrace();
+        Activity activity = VideoUtils.getActivity(context);
+        if (activity != null) {
+            WindowManager.LayoutParams lp = activity.getWindow().getAttributes();
+            if (lp.screenBrightness < 0) {
+                try {
+                    mGestureDownBrightness = Settings.System.getInt(context.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS) / 255;
+                    Timber.i("当前系统亮度：%s", mGestureDownBrightness);
+                } catch (Settings.SettingNotFoundException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                mGestureDownBrightness = lp.screenBrightness;
+                Timber.i("当前页面亮度: ", mGestureDownBrightness);
             }
-        } else {
-            mGestureDownBrightness = lp.screenBrightness;
-            Timber.i("当前页面亮度: ", mGestureDownBrightness);
+
+            float deltaV;
+
+            if (offset < 0) {   //加亮度
+                deltaV = mGestureDownBrightness + brightnessStep;
+            } else {     // 减亮度
+                deltaV = mGestureDownBrightness - brightnessStep;
+            }
+
+            WindowManager.LayoutParams params = activity.getWindow().getAttributes();
+            if (deltaV >= 1) { //这和声音有区别，必须自己过滤一下负值
+                deltaV = 1;
+            } else if (deltaV <= 0) {
+                deltaV = 0.01f;
+            }
+
+            params.screenBrightness = deltaV;
+
+            activity.getWindow().setAttributes(params);
+            //亮度百分比
+            return (int) (deltaV * 100);
         }
-
-        float deltaV;
-
-        if (offset < 0) {   //加亮度
-            deltaV = mGestureDownBrightness + brightnessStep;
-        } else {     // 减亮度
-            deltaV = mGestureDownBrightness - brightnessStep;
-        }
-
-        WindowManager.LayoutParams params = VideoUtils.getActivity(context).getWindow().getAttributes();
-        if (deltaV >= 1) { //这和声音有区别，必须自己过滤一下负值
-            deltaV = 1;
-        } else if (deltaV <= 0) {
-            deltaV = 0.01f;
-        }
-
-        params.screenBrightness = deltaV;
-
-        VideoUtils.getActivity(context).getWindow().setAttributes(params);
-        //亮度百分比
-        return (int) (deltaV * 100);
+        return 0;
     }
 
     /**
@@ -352,23 +350,47 @@ public final class VideoUtils {
 
         Timber.d("显示标题栏：%s", show);
 
-        ActionBar ab = VideoUtils.getActivity(context).getSupportActionBar();
+        Activity activity = VideoUtils.getActivity(context);
+        if (activity != null) {
+            if (activity instanceof AppCompatActivity) {
+                ActionBar ab = ((AppCompatActivity) activity).getSupportActionBar();
 
-        if (ab != null) {
+                if (ab != null) {
 
-            Timber.i("ActionBar 存在，%s", ab.getClass().getCanonicalName());
+                    Timber.i("ActionBar 存在，%s", ab.getClass().getCanonicalName());
 
-            if (show) {
-                ab.show();
+                    if (show) {
+                        ab.show();
 
-                VideoUtils.getActivity(context).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                        activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    } else {
+                        ab.hide();
+
+                        activity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    }
+                }
+
             } else {
-                ab.hide();
 
-                VideoUtils.getActivity(context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                        WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                android.app.ActionBar ab = activity.getActionBar();
+
+                if (ab != null) {
+
+                    Timber.i("ActionBar 存在，%s", ab.getClass().getCanonicalName());
+
+                    if (show) {
+                        ab.show();
+
+                        activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    } else {
+                        ab.hide();
+
+                        activity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    }
+                }
             }
-
         }
 
     }
@@ -379,11 +401,9 @@ public final class VideoUtils {
      * @param context
      */
     public static void keepScreenOn(@lombok.NonNull Context context) {
-        if (context != null) {
-            AppCompatActivity activity = VideoUtils.getActivity(context);
-            if (activity != null) {
-                activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            }
+        Activity activity = VideoUtils.getActivity(context);
+        if (activity != null) {
+            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
     }
 }

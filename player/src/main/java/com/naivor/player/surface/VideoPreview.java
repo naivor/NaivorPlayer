@@ -20,14 +20,10 @@ import android.graphics.Bitmap;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import timber.log.Timber;
-
-import static android.R.attr.bitmap;
 
 
 /**
@@ -45,11 +41,9 @@ public class VideoPreview {
     protected Bitmap defaultPreview;
     @Getter
     protected ImageView preview;
-    protected AspectRatioFrameLayout contentFrame;
 
 
-    public VideoPreview(AspectRatioFrameLayout contentFrame, ImageView videoPreview) {
-        this.contentFrame = contentFrame;
+    public VideoPreview(ImageView videoPreview) {
         this.preview = videoPreview;
 
     }
@@ -62,19 +56,13 @@ public class VideoPreview {
         if (preview != null && showPreview) {
 
             if (showFirstFrame) {
-                if (!setPreviewFromBitmap(defaultPreview) && preview.getDrawable() != null) {
-                    preview.setVisibility(View.VISIBLE);
-                } else {
-                    preview.setVisibility(View.VISIBLE);
-                }
-            } else {
-
-                if (preview.getDrawable() != null) {
-                    preview.setVisibility(View.VISIBLE);
-                } else if (!setPreviewFromBitmap(defaultPreview)) {
-                    preview.setVisibility(View.GONE);
-                }
+                Timber.d("显示第一帧");
+                setPreviewFromBitmap(defaultPreview);
             }
+
+            preview.setVisibility(View.VISIBLE);
+        } else {
+            preview.setVisibility(View.GONE);
         }
     }
 
@@ -114,9 +102,6 @@ public class VideoPreview {
             int bitmapWidth = bitmap.getWidth();
             int bitmapHeight = bitmap.getHeight();
             if (bitmapWidth > 0 && bitmapHeight > 0) {
-                if (contentFrame != null) {
-                    contentFrame.setAspectRatio((float) bitmapWidth / bitmapHeight);
-                }
                 preview.setImageBitmap(bitmap);
                 preview.setVisibility(View.VISIBLE);
                 return true;

@@ -14,25 +14,17 @@
   ~  limitations under the License.
   -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:layout_marginTop="1px">
+    android:layout_height="match_parent">
 
     <com.naivor.player.VideoPlayer
-        android:id="@+id/videoPlayer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:id="@+id/naivor_list_tiny_window"
+        android:layout_width="224dp"
+        android:layout_height="126dp"
+        android:layout_gravity="right|bottom"
+        android:layout_marginBottom="20dp"
+        android:layout_marginRight="5dp"
+        android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/tv_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="30dp"
-        android:text="标题"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp" />
-</FrameLayout>
-
-
+</merge>

@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.ListView;
 
+import com.naivor.player.VideoPlayer;
 import com.naivor.sample.R;
 import com.naivor.sample.adapter.VideoListAdapter;
 import com.naivor.sample.data.DataRepo;
@@ -40,6 +41,8 @@ public class ListVideoActivity extends AppCompatActivity {
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setDisplayUseLogoEnabled(false);
         actionBar.setTitle(getIntent().getStringExtra(EXTRA));
+
+        VideoPlayer.openTinyWhenOutScreen(this);
 
         context = getApplicationContext();
         listAdapter = new VideoListAdapter(context);

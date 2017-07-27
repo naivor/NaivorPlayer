@@ -17,6 +17,7 @@
 package com.naivor.player;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
@@ -26,7 +27,6 @@ import android.net.Uri;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -34,6 +34,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -62,6 +63,7 @@ import com.naivor.player.surface.ControlView;
 import com.naivor.player.surface.DialogHolder;
 import com.naivor.player.surface.OnControllViewListener;
 import com.naivor.player.surface.VideoPreview;
+import com.naivor.player.utils.ListVideoUtils;
 import com.naivor.player.utils.SourceUtils;
 import com.naivor.player.utils.Utils;
 import com.naivor.player.utils.VideoUtils;
@@ -89,6 +91,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     //小窗的宽高 16:9
     public static final int WIDTH_TINY_WINDOW = 224;
     public static final int HEIGHT_TINY_WINDOW = 126;
+
+    //是否开启小窗当播放器滑出屏幕的时候（仅在list中有用）
+    protected static boolean tinyWhenOutScreen = false;
 
     protected Context context;
 
@@ -126,10 +131,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     protected int originScreenState = ScreenState.SCREEN_LAYOUT_ORIGIN;
 
     protected String url = "";
-    protected Object[] objects = null;
+    protected String videoName = null;
     protected int seekToInAdvance = 0;
 
-    //是否开启自动缓冲，即设置播放url的时候就开始缓冲
+    //是否开启自动缓冲，即设置播放url的时候就开始缓冲（在list中不起作用）
     @Getter
     @Setter
     protected boolean autoPrepare = false;
@@ -209,7 +214,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
             controlView.setOnControllViewListener(this);
 
-            videoPreview = new VideoPreview(contentFrame, (ImageView) findViewById(R.id.iv_artwork));
+            videoPreview = new VideoPreview((ImageView) findViewById(R.id.iv_artwork));
 
         }
     }
@@ -223,10 +228,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      * 设置
      *
      * @param url
-     * @param objects
+     * @param videoName
      */
     @Override
-    public boolean setUp(String url, Object... objects) {
+    public boolean setUp(@lombok.NonNull String url, String videoName) {
 
         setVideoState(VideoState.CURRENT_STATE_ORIGIN);
 
@@ -234,12 +239,12 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
             return false;
         }
         this.url = url;
-        this.objects = objects;
+        this.videoName = videoName;
 
         setVideoState(VideoState.CURRENT_STATE_ORIGIN);
 
-        if (objects.length != 0) {
-            controlView.setVideoTitle(objects[0].toString());
+        if (videoName != null) {
+            controlView.setVideoTitle(videoName);
         }
 
         VideoUtils.saveLastUrl(url);
@@ -267,13 +272,13 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      * 直接全屏播放
      *
      * @param url
-     * @param objects
+     * @param videoName
      */
     @Override
-    public void startFullscreen(String url, Object... objects) {
+    public void startFullscreen(String url, String videoName) {
         Timber.d("直接全屏播放");
 
-        boolean setUp = setUp(url, ScreenState.SCREEN_WINDOW_FULLSCREEN, objects);
+        boolean setUp = setUp(url, videoName);
 
         if (setUp) {
             setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
@@ -565,16 +570,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         controlView.updateVideoState(state);
     }
 
-    /**
-     * 播放新视频
-     */
-    protected void notifyNewVideo() {
-        if (screenState == ScreenState.SCREEN_LAYOUT_LIST
-                || originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
-            PlayerCore.instance(context).addListListener(this);
-        }
-    }
-
 
     /**
      * 显示底部播放进度
@@ -743,37 +738,40 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
             if (parent == null && viewParent != null) {
 
-                ViewGroup vp = (ViewGroup) (VideoUtils.getActivity(context))  //加入contentView
-                        .findViewById(Window.ID_ANDROID_CONTENT);
+                Activity activity = VideoUtils.getActivity(context);
+                if (activity != null) {
+                    ViewGroup vp = (ViewGroup) activity  //加入contentView
+                            .findViewById(Window.ID_ANDROID_CONTENT);
 
-                if (viewParent != vp) {
+                    if (viewParent != vp) {
 
-                    parent = (ViewGroup) viewParent;
-                    indexInParent = parent.indexOfChild(this);
-                    parentLayoutParams = getLayoutParams();
-                    parent.removeView(this);   //从当前父布局移除
+                        parent = (ViewGroup) viewParent;
+                        indexInParent = parent.indexOfChild(this);
+                        parentLayoutParams = getLayoutParams();
+                        parent.removeView(this);   //从当前父布局移除
 
-                    pause();
+                        pause();
 
-                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
-                    vp.addView(this, lp);
+                        vp.addView(this, lp);
 
-                    VideoUtils.getActivity(context).setRequestedOrientation(fullscreenOrientation);
-                    VideoUtils.showSupportActionBar(context, false);
+                        activity.setRequestedOrientation(fullscreenOrientation);
+                        VideoUtils.showSupportActionBar(context, false);
 
-                    originScreenState = screenState;
+                        originScreenState = screenState;
 
-                    if (lockFullScreen) {
-                        setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
-                    } else {
-                        setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN);
+                        if (lockFullScreen) {
+                            setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
+                        } else {
+                            setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN);
+                        }
+
+                        resume();
+
+                        bottomProgressBar.setVisibility(GONE);
                     }
-
-                    resume();
-
-                    bottomProgressBar.setVisibility(GONE);
                 }
             }
         }
@@ -798,30 +796,33 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
             if (parent == null && viewParent != null) {
 
-                ViewGroup vp = (ViewGroup) (VideoUtils.getActivity(context))
-                        .findViewById(Window.ID_ANDROID_CONTENT);
+                Activity activity = VideoUtils.getActivity(context);
 
-                if (viewParent != vp) {
-                    parent = (ViewGroup) viewParent;
-                    indexInParent = parent.indexOfChild(this);
-                    parentLayoutParams = getLayoutParams();
-                    parent.removeView(this);   //从当前父布局移除
+                if (activity != null) {
+                    ViewGroup vp = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
 
-                    pause();
+                    if (viewParent != vp) {
+                        parent = (ViewGroup) viewParent;
+                        indexInParent = parent.indexOfChild(this);
+                        parentLayoutParams = getLayoutParams();
+                        parent.removeView(this);   //从当前父布局移除
 
-                    int widthTinyWindow = VideoUtils.dp2px(WIDTH_TINY_WINDOW);
-                    int heightTinyWindow = VideoUtils.dp2px(HEIGHT_TINY_WINDOW);
-                    FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(widthTinyWindow, heightTinyWindow);
-                    lp.gravity = Gravity.RIGHT | Gravity.BOTTOM;
-                    lp.bottomMargin = VideoUtils.dp2px(20);
-                    lp.rightMargin = VideoUtils.dp2px(5);
-                    vp.addView(this, lp);
+                        pause();
 
-                    originScreenState = screenState;
+                        int widthTinyWindow = VideoUtils.dp2px(WIDTH_TINY_WINDOW);
+                        int heightTinyWindow = VideoUtils.dp2px(HEIGHT_TINY_WINDOW);
+                        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(widthTinyWindow, heightTinyWindow);
+                        lp.gravity = Gravity.RIGHT | Gravity.BOTTOM;
+                        lp.bottomMargin = VideoUtils.dp2px(20);
+                        lp.rightMargin = VideoUtils.dp2px(5);
+                        vp.addView(this, lp);
 
-                    setScreenState(ScreenState.SCREEN_WINDOW_TINY);
+                        originScreenState = screenState;
 
-                    resume();
+                        setScreenState(ScreenState.SCREEN_WINDOW_TINY);
+
+                        resume();
+                    }
                 }
             }
         }
@@ -854,7 +855,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
                 parent.addView(this, indexInParent, parentLayoutParams);
 
-                VideoUtils.getActivity(context).setRequestedOrientation(normalOrientation);
+                Activity activity = VideoUtils.getActivity(context);
+                if (activity != null) {
+                    activity.setRequestedOrientation(normalOrientation);
+                }
                 VideoUtils.showSupportActionBar(context, true);
 
                 setScreenState(originScreenState);
@@ -958,7 +962,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         int id = view.getId();
         if (id == R.id.iv_back) {
             if (!backPress()) {
-                VideoUtils.getActivity(context).onBackPressed();
+                Activity activity = VideoUtils.getActivity(context);
+                if (activity != null) {
+                    activity.onBackPressed();
+                }
             }
         } else if (id == R.id.iv_tiny_exit) {
             backOriginWindow();
@@ -1042,14 +1049,18 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
     @Override
     public void onTouchScreenEnd() {
-        Timber.d("onTouchScreenEnd");
+        Timber.d("onTouchScreenEnd %s", hashCode());
 
         dialogHolder.dismissAllDialog();
     }
 
     @Override
     public void requestPrepareSourceData() {
-        notifyNewVideo();
+        // 在list中时，告诉所有播放器播放新视频的事件
+        if (screenState == ScreenState.SCREEN_LAYOUT_LIST
+                || originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
+            PlayerCore.instance(context).addListListener(this);
+        }
 
         if (isBuffering()) {
             onPrepared();
@@ -1124,10 +1135,34 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         Timber.d("onAttachedToWindow");
 
-        AppCompatActivity activity = VideoUtils.getActivity(context);
+        Activity activity = VideoUtils.getActivity(context);
         if (activity != null) {
             normalOrientation = activity.getResources().getConfiguration().orientation;
         }
+
+
+        getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+            @Override
+            public void onScrollChanged() {
+                // 在list 中时，告诉所有播放器位置已经改变
+                if (screenState == ScreenState.SCREEN_LAYOUT_LIST
+                        || originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
+
+                    if ((isPrepare() || isBuffering() || isPlaying() || isPause())) {
+                        if (!VideoUtils.isViewInScreen(VideoPlayer.this)) {  //滑出屏幕
+                            stopAndReset();
+
+                            if (tinyWhenOutScreen) {
+                                ListVideoUtils.startWindowTiny(url, videoName);
+                            }
+
+                        } else if (tinyWhenOutScreen) {
+                            ListVideoUtils.stopPlayAndCloseTiny();
+                        }
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -1143,7 +1178,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         mAudioManager = null;
         url = null;
         onAudioFocusChangeListener = null;
-        objects = null;
+        videoName = null;
         playEventListener = null;
         videoPreview = null;
     }
@@ -1188,17 +1223,41 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         }
     }
 
+
     @Override
     public void onNewVideo() {
-        Timber.i("当前view已滑出屏幕");
-        //停止正在播放的
-        if (isPlaying() || isPrepare() || isBuffering() || isPause()) {
-            stop();
+        Timber.i("播放新Video");
+
+        stopAndReset();
+
+        if (tinyWhenOutScreen) {
+            ListVideoUtils.stopPlayAndCloseTiny();
         }
+    }
 
-        unBindPlayer();
+    /**
+     * 停止播放并重置
+     */
+    public void stopAndReset() {
+        Timber.i("stopAndReset");
 
-        setVideoState(VideoState.CURRENT_STATE_ORIGIN);
+        if (videoState != VideoState.CURRENT_STATE_ORIGIN) {
+            stop();
+            unBindPlayer();
+            setVideoState(VideoState.CURRENT_STATE_ORIGIN);
+        }
+    }
+
+
+    /**
+     * 开启小窗播放当滑出屏幕的时候
+     *
+     * @param activity
+     */
+    public static void openTinyWhenOutScreen(@lombok.NonNull Activity activity) {
+        tinyWhenOutScreen = true;
+
+        ListVideoUtils.init(activity);
     }
 
 }

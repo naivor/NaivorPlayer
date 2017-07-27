@@ -67,18 +67,18 @@ public interface VideoController extends PositionController, PlayController {
 
     /**
      * @param url
-     * @param objects
+     * @param videoName
      * @return
      */
-    boolean setUp(String url, Object... objects);
+    boolean setUp(@lombok.NonNull String url, String videoName);
 
     /**
      * 直接全屏播放
      *
      * @param url
-     * @param objects
+     * @param videoName
      */
-    void startFullscreen(String url, Object... objects);
+    void startFullscreen(String url, String videoName);
 
     /**
      * 准备播放器，初始化播放源

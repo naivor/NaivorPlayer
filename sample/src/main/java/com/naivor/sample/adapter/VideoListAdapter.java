@@ -18,6 +18,7 @@ package com.naivor.sample.adapter;
 
 import android.content.Context;
 import android.view.View;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.naivor.adapter.AdapterOperator;
@@ -57,6 +58,8 @@ public class VideoListAdapter extends ListAdapter<VideoUrl> {
 
         @BindView(R.id.videoPlayer)
         VideoPlayer videoPlayer;
+        @BindView(R.id.tv_name)
+        TextView tvName;
 
         public VideoListHolder(View itemView) {
             super(itemView);
@@ -68,11 +71,14 @@ public class VideoListAdapter extends ListAdapter<VideoUrl> {
         public void bindData(AdapterOperator<VideoUrl> operator, int position, VideoUrl itemData) {
             super.bindData(operator, position, itemData);
 
+            tvName.setText(itemData.getName());
+
             //加载封面
             Glide.with(context)
                     .load(DataRepo.VIDEO_COVER)
                     .override(320, 240)
                     .into(videoPlayer.getPreviewView());
+
             videoPlayer.setScreenState(ScreenState.SCREEN_LAYOUT_LIST);
             videoPlayer.setUp(itemData.getUrl(), itemData.getName());
 

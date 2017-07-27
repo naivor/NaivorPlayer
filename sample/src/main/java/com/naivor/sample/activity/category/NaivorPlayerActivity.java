@@ -72,7 +72,7 @@ public class NaivorPlayerActivity extends AppCompatActivity {
 //            videoPlayer.setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
 
             //开始播放
-//            videoPlayer.start();
+            videoPlayer.start();
         }
     }
 
@@ -96,7 +96,7 @@ public class NaivorPlayerActivity extends AppCompatActivity {
                     ToastUtil.show("请输入播放地址！");
                 } else {
                     Timber.d("播放地址：%s", text);
-                    videoPlayer.setUp(text, ScreenState.SCREEN_LAYOUT_ORIGIN, "输入的播放地址");
+                    videoPlayer.setUp(text, "输入的播放地址");
                     videoPlayer.start();
                 }
                 break;
