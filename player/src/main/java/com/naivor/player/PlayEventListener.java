@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.naivor.player.core;
+package com.naivor.player;
 
 import android.view.View;
 

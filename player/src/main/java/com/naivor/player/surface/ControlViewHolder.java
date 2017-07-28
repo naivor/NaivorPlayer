@@ -72,22 +72,22 @@ public class ControlViewHolder {
     public ControlViewHolder(@NonNull View rootView) {
         this.rootView = rootView;
 
-        playBtn = rootView.findViewById(R.id.iv_start);
+        playBtn = (ImageView) rootView.findViewById(R.id.iv_start);
 
-        buttomLayout = rootView.findViewById(R.id.ll_bottom);
-        durationView = rootView.findViewById(R.id.tv_total);
-        positionView = rootView.findViewById(R.id.tv_current);
-        timeBar = rootView.findViewById(R.id.sb_progress);
-        fullScreenBtn = rootView.findViewById(R.id.iv_fullscreen);
-        thumbBar = rootView.findViewById(R.id.pb_loading);
+        buttomLayout = (LinearLayout) rootView.findViewById(R.id.ll_bottom);
+        durationView = (TextView) rootView.findViewById(R.id.tv_total);
+        positionView = (TextView) rootView.findViewById(R.id.tv_current);
+        timeBar = (SeekBar) rootView.findViewById(R.id.sb_progress);
+        fullScreenBtn = (Button) rootView.findViewById(R.id.iv_fullscreen);
+        thumbBar = (ProgressBar) rootView.findViewById(R.id.pb_loading);
 
-        topLayout = rootView.findViewById(R.id.fl_top);
-        llTitle = rootView.findViewById(R.id.ll_title);
-        backBtn = rootView.findViewById(R.id.iv_back);
-        videoTitle = rootView.findViewById(R.id.tv_title);
-        rlTiny = rootView.findViewById(R.id.rl_tiny);
-        tinyExitBtn = rootView.findViewById(R.id.iv_tiny_exit);
-        tinyCloseBtn = rootView.findViewById(R.id.iv_tiny_close);
+        topLayout = (FrameLayout) rootView.findViewById(R.id.fl_top);
+        llTitle = (LinearLayout) rootView.findViewById(R.id.ll_title);
+        backBtn = (Button) rootView.findViewById(R.id.iv_back);
+        videoTitle = (TextView) rootView.findViewById(R.id.tv_title);
+        rlTiny = (RelativeLayout) rootView.findViewById(R.id.rl_tiny);
+        tinyExitBtn = (Button) rootView.findViewById(R.id.iv_tiny_exit);
+        tinyCloseBtn = (Button) rootView.findViewById(R.id.iv_tiny_close);
 
     }
 

@@ -45,7 +45,7 @@ public class RecyclerViewVideoActivity extends AppCompatActivity {
         actionBar.setDisplayUseLogoEnabled(false);
         actionBar.setTitle(getIntent().getStringExtra(EXTRA));
 
-        VideoPlayer.openTinyWhenOutScreen(this);
+        VideoPlayer.openTinyWhenOutScreen(rvContent);
 
         rvContent.setLayoutManager(new LinearLayoutManager(context));
         recyclerAdapter = new VideoRecyclerAdapter(context);

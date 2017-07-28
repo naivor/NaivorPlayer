@@ -42,7 +42,7 @@ public class ListVideoActivity extends AppCompatActivity {
         actionBar.setDisplayUseLogoEnabled(false);
         actionBar.setTitle(getIntent().getStringExtra(EXTRA));
 
-        VideoPlayer.openTinyWhenOutScreen(this);
+        VideoPlayer.openTinyWhenOutScreen(lvContent);
 
         context = getApplicationContext();
         listAdapter = new VideoListAdapter(context);

@@ -178,9 +178,9 @@ public class DialogHolder {
     public void showVolumeDialog(int volumePercent, boolean add) {
         if (mVolumeDialog == null) {
             View localView = LayoutInflater.from(context).inflate(R.layout.dialog_volume, null);
-            mDialogVolumeImageView = localView.findViewById(R.id.volume_image_tip);
-            mDialogVolumeTextView = localView.findViewById(R.id.tv_volume);
-            mDialogVolumeProgressBar = localView.findViewById(R.id.volume_progressbar);
+            mDialogVolumeImageView = (ImageView) localView.findViewById(R.id.volume_image_tip);
+            mDialogVolumeTextView = (TextView) localView.findViewById(R.id.tv_volume);
+            mDialogVolumeProgressBar = (ProgressBar) localView.findViewById(R.id.volume_progressbar);
             mVolumeDialog = createDialogWithView(localView);
         }
 
@@ -213,9 +213,9 @@ public class DialogHolder {
     public void showBrightnessDialog(int brightnessPercent) {
         if (mBrightnessDialog == null) {
             View localView = LayoutInflater.from(context).inflate(R.layout.dialog_brightness, null);
-            mDialogBrightnessTextView = localView.findViewById(R.id.tv_brightness);
-            mDialogBrightnessProgressBar = localView.findViewById(R.id.brightness_progressbar);
-            mDialogBrightnessImageView = localView.findViewById(R.id.iv_brightness);
+            mDialogBrightnessTextView = (TextView) localView.findViewById(R.id.tv_brightness);
+            mDialogBrightnessProgressBar = (ProgressBar) localView.findViewById(R.id.brightness_progressbar);
+            mDialogBrightnessImageView = (ImageView) localView.findViewById(R.id.iv_brightness);
             mBrightnessDialog = createDialogWithView(localView);
         }
         if (!mBrightnessDialog.isShowing()) {

@@ -37,6 +37,7 @@ dependencies {
     })
 
     compile rootProject.ext.dependencies.appcompat_v7
+    compile rootProject.ext.dependencies.recyclerview
 
     compile rootProject.ext.dependencies.exoplayer
 

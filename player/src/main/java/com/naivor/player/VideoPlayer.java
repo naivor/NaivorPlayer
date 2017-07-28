@@ -34,7 +34,6 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -42,21 +41,17 @@ import android.widget.ProgressBar;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Renderer;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
-import com.google.android.exoplayer2.upstream.Allocator;
 import com.google.android.exoplayer2.util.Assertions;
 import com.naivor.player.constant.OrientationState;
 import com.naivor.player.constant.ScreenState;
 import com.naivor.player.constant.VideoState;
 import com.naivor.player.controll.VideoController;
-import com.naivor.player.core.PlayEventListener;
 import com.naivor.player.core.PlayerCore;
 import com.naivor.player.core.VideoLayoutListListener;
 import com.naivor.player.surface.ControlView;
@@ -85,7 +80,9 @@ import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_SENSO
 
 @TargetApi(16)
 public class VideoPlayer extends FrameLayout implements OnControllViewListener, VideoLayoutListListener,
-        VideoController, ExoPlayer.EventListener, SimpleExoPlayer.VideoListener, LoadControl {
+        VideoController, ExoPlayer.EventListener, SimpleExoPlayer.VideoListener {
+    public static final String TAG = VideoPlayer.class.getSimpleName();
+    public static final int TAGKEY = 0x5201314;
 
     public static final int FULL_SCREEN_NORMAL_DELAY = 300;
     //小窗的宽高 16:9
@@ -130,7 +127,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     @ScreenState.ScreenStateValue
     protected int originScreenState = ScreenState.SCREEN_LAYOUT_ORIGIN;
 
+    @Getter
     protected String url = "";
+    @Getter
     protected String videoName = null;
     protected int seekToInAdvance = 0;
 
@@ -204,9 +203,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         if (!isInEditMode()) {
             Utils.init(context);
 
-            contentFrame = findViewById(R.id.surface_container);
-            bottomProgressBar = findViewById(R.id.bottom_progress);
-            controlView = findViewById(R.id.cv_controll);
+            contentFrame = (AspectRatioFrameLayout) findViewById(R.id.surface_container);
+            bottomProgressBar = (ProgressBar) findViewById(R.id.bottom_progress);
+            controlView = (ControlView) findViewById(R.id.cv_controll);
 
             contentFrame.setResizeMode(resizeMode);
 
@@ -216,6 +215,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
             videoPreview = new VideoPreview((ImageView) findViewById(R.id.iv_artwork));
 
+            setTag(TAG);
         }
     }
 
@@ -241,8 +241,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         this.url = url;
         this.videoName = videoName;
 
-        setVideoState(VideoState.CURRENT_STATE_ORIGIN);
-
         if (videoName != null) {
             controlView.setVideoTitle(videoName);
         }
@@ -251,7 +249,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         //自动缓冲，必须是wifi下,或者允许数据流量看视频,不能是视频列表
         if ((VideoUtils.isWifi() || dialogHolder.isPlayWithNotWifi())
-                && isAutoPrepareEnable()) {
+                && autoPrepare && isListVideo()) {
             prepareSource();
         }
 
@@ -259,12 +257,12 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     }
 
     /**
-     * 是否自动缓冲可用
+     * 是否list播放
      *
      * @return
      */
-    private boolean isAutoPrepareEnable() {
-        return autoPrepare && screenState != ScreenState.SCREEN_LAYOUT_LIST
+    protected boolean isListVideo() {
+        return screenState != ScreenState.SCREEN_LAYOUT_LIST
                 && originScreenState != ScreenState.SCREEN_LAYOUT_LIST;
     }
 
@@ -293,6 +291,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     public void prepareSource() {
         Timber.d("准备播放源");
 
+        initTextureView();
+
         bindPlayer();
 
         VideoUtils.keepScreenOn(context);
@@ -319,10 +319,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         controlView.setPlayer(player);
 
         playerCore.setEventListener(this);
-        playerCore.setLoadControl(this);
         playerCore.setVideoListener(this);
 
-        initTextureView();
+        removeTextureView();
         addTextureView();
 
         if (mAudioManager == null) {
@@ -341,10 +340,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         PlayerCore playerCore = PlayerCore.instance(context);
 
+        controlView.setPlayer(null);
+
         removeTextureView();
 
         playerCore.setEventListener(null);
-        playerCore.setLoadControl(null);
         playerCore.setVideoListener(null);
 
         if (mAudioManager != null) {
@@ -359,10 +359,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     public void initTextureView() {
         Timber.d("初始化 TextureView");
 
-        removeTextureView();
+        PlayerCore instance = PlayerCore.instance(context);
 
-
-        PlayerCore.instance(context).setSurfaceView(new TextureView(context));
+        if (instance.getSurfaceView() == null) {
+            instance.setSurfaceView(new TextureView(context));
+        }
     }
 
     /**
@@ -403,14 +404,14 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
     @Override
     public void pause() {
-        if (videoState == VideoState.CURRENT_STATE_PLAYING) {
+        if (isVideoInPlayState()) {
             controlView.pause();
         }
     }
 
     @Override
     public void resume() {
-        if (videoState == VideoState.CURRENT_STATE_PAUSE) {
+        if (isVideoInPlayState()) {
             controlView.resume();
         }
     }
@@ -487,6 +488,12 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         return videoState == VideoState.CURRENT_STATE_PLAYING;
     }
 
+
+    @Override
+    public boolean isVideoInPlayState() {
+        return isPrepare() || isBuffering() || isPlaying() || isPause();
+    }
+
     @Override
     public boolean isPause() {
         return videoState == VideoState.CURRENT_STATE_PAUSE;
@@ -552,7 +559,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         //显示预览
         if (state == VideoState.CURRENT_STATE_ORIGIN || state == VideoState.CURRENT_STATE_COMPLETE) {
-            videoPreview.showPreview(isAutoPrepareEnable());
+            videoPreview.showPreview(autoPrepare && isListVideo());
         } else {
             videoPreview.hidePreview();
         }
@@ -667,39 +674,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     public void setResizeMode(@AspectRatioFrameLayout.ResizeMode int resizeMode) {
         Assertions.checkState(contentFrame != null);
         contentFrame.setResizeMode(resizeMode);
-    }
-
-    @Override
-    public void onTracksSelected(Renderer[] renderers, TrackGroupArray trackGroupArray, TrackSelectionArray trackSelectionArray) {
-        Timber.d("onTracksSelected");
-    }
-
-    @Override
-    public void onStopped() {
-        Timber.d("onStopped");
-    }
-
-    @Override
-    public void onReleased() {
-        Timber.d("onReleased");
-    }
-
-    @Override
-    public Allocator getAllocator() {
-        Timber.d("getAllocator");
-        return null;
-    }
-
-    @Override
-    public boolean shouldStartPlayback(long l, boolean b) {
-        Timber.d("shouldStartPlayback");
-        return false;
-    }
-
-    @Override
-    public boolean shouldContinueLoading(long l) {
-        Timber.d("shouldContinueLoading");
-        return false;
     }
 
     /**
@@ -1141,28 +1115,33 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         }
 
 
-        getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
-            @Override
-            public void onScrollChanged() {
-                // 在list 中时，告诉所有播放器位置已经改变
-                if (screenState == ScreenState.SCREEN_LAYOUT_LIST
-                        || originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
-
-                    if ((isPrepare() || isBuffering() || isPlaying() || isPause())) {
-                        if (!VideoUtils.isViewInScreen(VideoPlayer.this)) {  //滑出屏幕
-                            stopAndReset();
-
-                            if (tinyWhenOutScreen) {
-                                ListVideoUtils.startWindowTiny(url, videoName);
-                            }
-
-                        } else if (tinyWhenOutScreen) {
-                            ListVideoUtils.stopPlayAndCloseTiny();
-                        }
-                    }
-                }
-            }
-        });
+//        ViewTreeObserver.OnScrollChangedListener onScrollChangedListener = new ViewTreeObserver.OnScrollChangedListener() {
+//            @Override
+//            public void onScrollChanged() {
+//                // 在list 中时，告诉所有播放器位置已经改变
+//                if (screenState == ScreenState.SCREEN_LAYOUT_LIST
+//                        || originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
+//
+//                    if ((isPrepare() || isBuffering() || isPlaying() || isPause())) {
+//
+//                        Timber.d("欢迎 xxx,state:%s", VideoState.getVideoStateName(videoState));
+//
+//                        if (!VideoUtils.isViewInScreen(VideoPlayer.this)) {  //滑出屏幕
+//                            stopAndReset();
+//
+//                            if (tinyWhenOutScreen) {
+//                                ListVideoUtils.startTinyWhenScrollOut(url, videoName, hashCode());
+//                            }
+//
+//                        } else if (tinyWhenOutScreen) {
+//                            ListVideoUtils.stopTinyWhenScrollIn(hashCode());
+//                        }
+//                    }
+//                }
+//            }
+//        };
+//
+//        getViewTreeObserver().addOnScrollChangedListener(onScrollChangedListener);
     }
 
     /**
@@ -1228,36 +1207,50 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     public void onNewVideo() {
         Timber.i("播放新Video");
 
-        stopAndReset();
-
-        if (tinyWhenOutScreen) {
-            ListVideoUtils.stopPlayAndCloseTiny();
-        }
-    }
-
-    /**
-     * 停止播放并重置
-     */
-    public void stopAndReset() {
-        Timber.i("stopAndReset");
-
         if (videoState != VideoState.CURRENT_STATE_ORIGIN) {
             stop();
             unBindPlayer();
             setVideoState(VideoState.CURRENT_STATE_ORIGIN);
         }
+
+//        if (tinyWhenOutScreen) {
+//            ListVideoUtils.stopWhenNewVideoPlay();
+//        }
+    }
+
+
+    /**
+     * 交换播放器，让画面在新的播放器继续播放
+     */
+    public static void swapVideoPlayer(@lombok.NonNull VideoPlayer oldPlayer, @lombok.NonNull VideoPlayer newPlayer) {
+
+        boolean pause = oldPlayer.isPause();
+        newPlayer.setVideoState(oldPlayer.getVideoState());
+
+        oldPlayer.pause();
+        oldPlayer.unBindPlayer();
+        oldPlayer.setVideoState(VideoState.CURRENT_STATE_ORIGIN);
+
+        newPlayer.bindPlayer();
+        if (pause) {
+            newPlayer.pause();
+        } else {
+            newPlayer.resume();
+        }
+
+        Timber.i("交换播放器，让画面在新的播放器继续播放,原：%s,新：%s", VideoState.getVideoStateName(oldPlayer.getVideoState()), VideoState.getVideoStateName(newPlayer.getVideoState()));
     }
 
 
     /**
      * 开启小窗播放当滑出屏幕的时候
      *
-     * @param activity
+     * @param listView
      */
-    public static void openTinyWhenOutScreen(@lombok.NonNull Activity activity) {
+    public static void openTinyWhenOutScreen(@lombok.NonNull ViewGroup listView) {
         tinyWhenOutScreen = true;
 
-        ListVideoUtils.init(activity);
+        ListVideoUtils.init(listView);
     }
 
 }

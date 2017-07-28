@@ -3,7 +3,7 @@ def support = "25.3.1"
 ext {
 
     android = [
-            compileSdkVersion: 26,
+            compileSdkVersion: 25,
             buildToolsVersion: "25.0.0",
 
             applicationId    : "com.naivor.player.sample",

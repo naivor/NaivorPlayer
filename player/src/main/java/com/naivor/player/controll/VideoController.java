@@ -45,6 +45,13 @@ public interface VideoController extends PositionController, PlayController {
     boolean isPlaying();
 
     /**
+     * 是否在播放状态
+     *
+     * @return
+     */
+    boolean isVideoInPlayState();
+
+    /**
      * 是否暂停状态
      *
      * @return

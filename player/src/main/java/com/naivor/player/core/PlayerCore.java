@@ -20,16 +20,16 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.RenderersFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.naivor.player.core.decorate.VideoLoadControl;
+import com.naivor.player.core.decorate.VideoRenderersFactory;
+import com.naivor.player.core.decorate.VideoTrackSelector;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -45,25 +45,35 @@ public final class PlayerCore {
 
     private Context context;
 
+    //默认
+    private VideoRenderersFactory videoRenderersFactory; //渲染工厂
+    private VideoTrackSelector videoTrackSelector; //轨道选择器
+    private VideoLoadControl videoLoadControll; //加载状态监听
+
+    //自定义
     private RenderersFactory renderersFactory;  //渲染工厂
     private TrackSelector trackSelector; //轨道选择器
+    private LoadControl loadControl;  //加载状态监听
 
+    //播放器
     private SimpleExoPlayer player;
-
+    //显示画面的View
     private View surfaceView;
 
     private MediaSource mediaSource;    //音频数据源
     private boolean haveResetPosition = true;   //是否重置播放位置
     private boolean haveResetState;   //是否重置状态
 
-    private LoadControl loadControl;  //加载状态监听
+    //事件监听
+    private ExoPlayer.EventListener eventListener;
+    private SimpleExoPlayer.VideoListener videoListener;
 
-    private ExoPlayer.EventListener eventListener;  //事件监听
-    private SimpleExoPlayer.VideoListener videoListener; //事件监听
-
+    //单利
     private static PlayerCore playerCore;
 
+    //list播放用到
     protected Set<VideoLayoutListListener> listListeners;
+
 
     /**
      * 单例
@@ -97,12 +107,16 @@ public final class PlayerCore {
      * @param context
      */
     private void createPlayer(@NonNull Context context) {
-        renderersFactory = new DefaultRenderersFactory(context);
-        trackSelector = new DefaultTrackSelector();
+        videoRenderersFactory = new VideoRenderersFactory(context);
+        videoRenderersFactory.setRenderersFactory(renderersFactory);
 
-        loadControl = new DefaultLoadControl();
+        videoTrackSelector = new VideoTrackSelector();
+        videoTrackSelector.setTrackSelector(trackSelector);
 
-        player = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, loadControl);
+        videoLoadControll = new VideoLoadControl();
+        videoLoadControll.setLoadControl(loadControl);
+
+        player = ExoPlayerFactory.newSimpleInstance(videoRenderersFactory, videoTrackSelector, videoLoadControll);
     }
 
 
@@ -157,6 +171,94 @@ public final class PlayerCore {
         }
     }
 
+    /**
+     * @return
+     */
+    public SimpleExoPlayer getPlayer() {
+
+        if (player == null) {
+            createPlayer(context);
+        }
+
+        return player;
+    }
+
+    /**
+     * 设置监听器
+     *
+     * @param eventListener
+     */
+    public void setEventListener(ExoPlayer.EventListener eventListener) {
+        if (player != null) {
+            if (this.eventListener != null) {
+                player.removeListener(this.eventListener);
+            }
+
+            if (eventListener != null) {
+                player.addListener(eventListener);
+            }
+        }
+
+        this.eventListener = eventListener;
+    }
+
+    /**
+     * 设置监听器
+     *
+     * @param videoListener
+     */
+    public void setVideoListener(SimpleExoPlayer.VideoListener videoListener) {
+        if (player != null) {
+            if (this.videoListener != null) {
+                player.clearVideoListener(this.videoListener);
+            }
+
+            if (eventListener != null) {
+                player.setVideoListener(videoListener);
+            }
+        }
+
+        this.videoListener = videoListener;
+    }
+
+    /**
+     * 设置加载控制
+     *
+     * @param loadControl
+     */
+    public void setLoadControl(LoadControl loadControl) {
+        if (videoLoadControll != null) {
+            videoLoadControll.setLoadControl(loadControl);
+        }
+
+        this.loadControl = loadControl;
+    }
+
+    /**
+     * 设置渲染工厂
+     *
+     * @param renderersFactory
+     */
+    public void setRenderersFactory(@NonNull RenderersFactory renderersFactory) {
+        if (videoRenderersFactory != null) {
+            videoRenderersFactory.setRenderersFactory(renderersFactory);
+        }
+
+        this.renderersFactory = renderersFactory;
+    }
+
+    /**
+     * 设置轨道选择器
+     *
+     * @param trackSelector
+     */
+    public void setTrackSelector(@NonNull TrackSelector trackSelector) {
+        if (videoTrackSelector != null) {
+            videoTrackSelector.setTrackSelector(trackSelector);
+        }
+
+        this.trackSelector = trackSelector;
+    }
 
     /**
      * 释放资源
@@ -167,6 +269,11 @@ public final class PlayerCore {
         }
 
         player = null;
+
+        videoRenderersFactory = null;
+        videoTrackSelector = null;
+        videoLoadControll = null;
+
         renderersFactory = null;
         trackSelector = null;
         loadControl = null;
@@ -183,28 +290,8 @@ public final class PlayerCore {
         return renderersFactory;
     }
 
-    public void setRenderersFactory(@NonNull RenderersFactory renderersFactory) {
-        this.renderersFactory = renderersFactory;
-    }
-
     public TrackSelector getTrackSelector() {
         return trackSelector;
-    }
-
-    public void setTrackSelector(@NonNull TrackSelector trackSelector) {
-        this.trackSelector = trackSelector;
-    }
-
-    /**
-     * @return
-     */
-    public SimpleExoPlayer getPlayer() {
-
-        if (player == null) {
-            createPlayer(context);
-        }
-
-        return player;
     }
 
     public void setPlayer(@NonNull SimpleExoPlayer player) {
@@ -231,23 +318,13 @@ public final class PlayerCore {
         return loadControl;
     }
 
-    public void setLoadControl(LoadControl loadControl) {
-        this.loadControl = loadControl;
-    }
-
     public ExoPlayer.EventListener getEventListener() {
         return eventListener;
-    }
-
-    public void setEventListener(ExoPlayer.EventListener eventListener) {
-        this.eventListener = eventListener;
     }
 
     public SimpleExoPlayer.VideoListener getVideoListener() {
         return videoListener;
     }
 
-    public void setVideoListener(SimpleExoPlayer.VideoListener videoListener) {
-        this.videoListener = videoListener;
-    }
+
 }
