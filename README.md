@@ -1,6 +1,6 @@
  ![naivorplayer_cover](https://github.com/naivor/NaivorPlayer/blob/master/doc/naivorplayer_cover.png)
 
-![palform](https://img.shields.io/badge/palform-android-orange.svg)    ![luanguage](https://img.shields.io/badge/luanguage-java-09BCA4.svg)   [![Build Status](https://travis-ci.org/naivor/NaivorPlayer.svg?branch=master)](https://travis-ci.org/naivor/NaivorPlayer)    ![release](https://img.shields.io/badge/release-1.1.1-green.svg)     [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)     ![license](https://img.shields.io/badge/license-Apache%202.0-BC0962.svg)      ![author](https://img.shields.io/badge/%E4%BD%9C%E8%80%85-naivor-blue.svg)
+![palform](https://img.shields.io/badge/palform-android-orange.svg)    ![luanguage](https://img.shields.io/badge/luanguage-java-09BCA4.svg)   [![Build Status](https://travis-ci.org/naivor/NaivorPlayer.svg?branch=master)](https://travis-ci.org/naivor/NaivorPlayer)    ![release](https://img.shields.io/badge/release-1.1.1-green.svg)     [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)        <a href="http://www.methodscount.com/?lib=com.naivor%3Aplayer%3A1.1.1"><img src="https://img.shields.io/badge/Size-193 KB-e91e63.svg"/></a>      ![license](https://img.shields.io/badge/license-Apache%202.0-BC0962.svg)      ![author](https://img.shields.io/badge/%E4%BD%9C%E8%80%85-naivor-blue.svg)
 
 
 ## **简介**
@@ -113,15 +113,11 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 
   * Listview
 
-    ![play_video_in_ListView](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_ListView.gif)
-
-    ![play_video_in_ListView_tiny_when_scrollOut](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_ListView_tiny_when_scrollOut.gif)
+    ![play_video_in_ListView](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_ListView.gif) ![play_video_in_ListView_tiny_when_scrollOut](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_ListView_tiny_when_scrollOut.gif)
 
   * RecyclerView
 
-    ![play_video_in_RecyclerView](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_RecyclerView.gif)
-
-    ![play_video_in_RecyclerView_tiny_when_scrollOut](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_RecyclerView_tiny_when_scrollOut.gif)
+    ![play_video_in_RecyclerView](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_RecyclerView.gif) ![play_video_in_RecyclerView_tiny_when_scrollOut](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_RecyclerView_tiny_when_scrollOut.gif)
 
 
 
