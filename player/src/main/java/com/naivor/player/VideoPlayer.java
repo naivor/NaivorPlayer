@@ -38,6 +38,7 @@ import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -52,13 +53,12 @@ import com.naivor.player.constant.OrientationState;
 import com.naivor.player.constant.ScreenState;
 import com.naivor.player.constant.VideoState;
 import com.naivor.player.controll.VideoController;
+import com.naivor.player.core.OnListVideoPlayListener;
 import com.naivor.player.core.PlayerCore;
-import com.naivor.player.core.VideoLayoutListListener;
 import com.naivor.player.surface.ControlView;
 import com.naivor.player.surface.DialogHolder;
 import com.naivor.player.surface.OnControllViewListener;
 import com.naivor.player.surface.VideoPreview;
-import com.naivor.player.utils.ListVideoUtils;
 import com.naivor.player.utils.SourceUtils;
 import com.naivor.player.utils.Utils;
 import com.naivor.player.utils.VideoUtils;
@@ -79,10 +79,10 @@ import static com.naivor.player.constant.OrientationState.ORIENTATION_TYPE_SENSO
  */
 
 @TargetApi(16)
-public class VideoPlayer extends FrameLayout implements OnControllViewListener, VideoLayoutListListener,
+public class VideoPlayer extends FrameLayout implements OnControllViewListener, OnListVideoPlayListener,
         VideoController, ExoPlayer.EventListener, SimpleExoPlayer.VideoListener {
+
     public static final String TAG = VideoPlayer.class.getSimpleName();
-    public static final int TAGKEY = 0x5201314;
 
     public static final int FULL_SCREEN_NORMAL_DELAY = 300;
     //小窗的宽高 16:9
@@ -121,7 +121,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     @Getter
     @VideoState.VideoStateValue
     protected int videoState = VideoState.CURRENT_STATE_ORIGIN;
-
+    @Getter
     @ScreenState.ScreenStateValue
     protected int screenState = ScreenState.SCREEN_LAYOUT_ORIGIN;
     @ScreenState.ScreenStateValue
@@ -156,19 +156,21 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     protected AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
         @Override
         public void onAudioFocusChange(int focusChange) {
-            switch (focusChange) {
-                case AudioManager.AUDIOFOCUS_GAIN:  //获得音频焦点，继续播放
-                    resume();
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS:  //失去音频焦点，停止播放
-                    stop();
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:  //短暂失去音频焦点，暂停播放
-                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:  //闪避，暂停播放
-                    pause();
-                    break;
-                default:
-                    break;
+            if (isVideoInPlayState()) {
+                switch (focusChange) {
+                    case AudioManager.AUDIOFOCUS_GAIN:  //获得音频焦点，继续播放
+                        resume();
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS:  //失去音频焦点，停止播放
+//                        stop();
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:  //短暂失去音频焦点，暂停播放
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:  //闪避，暂停播放
+                        pause();
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     };
@@ -196,12 +198,16 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     protected void init(@lombok.NonNull Context context) {
         this.context = context;
 
-        View.inflate(context, getLayoutId(), this);
         //背景
         setBackgroundColor(frameBackground);
 
         if (!isInEditMode()) {
             Utils.init(context);
+
+            setMinimumWidth(VideoUtils.dp2px(WIDTH_TINY_WINDOW));
+            setMinimumHeight(VideoUtils.dp2px(HEIGHT_TINY_WINDOW));
+
+            View.inflate(context, getLayoutId(), this);
 
             contentFrame = (AspectRatioFrameLayout) findViewById(R.id.surface_container);
             bottomProgressBar = (ProgressBar) findViewById(R.id.bottom_progress);
@@ -216,6 +222,12 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
             videoPreview = new VideoPreview((ImageView) findViewById(R.id.iv_artwork));
 
             setTag(TAG);
+        } else {
+            float density = context.getResources().getDisplayMetrics().density;
+            setMinimumWidth((int) (density * WIDTH_TINY_WINDOW));
+            setMinimumHeight((int) (density * HEIGHT_TINY_WINDOW));
+
+            View.inflate(context, getLayoutId(), this);
         }
     }
 
@@ -225,19 +237,25 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     }
 
     /**
-     * 设置
+     * 是否list播放
      *
-     * @param url
-     * @param videoName
+     * @return
      */
+    protected boolean isScreenList() {
+        return screenState == ScreenState.SCREEN_LAYOUT_LIST
+                || originScreenState == ScreenState.SCREEN_LAYOUT_LIST;
+    }
+
     @Override
     public boolean setUp(@lombok.NonNull String url, String videoName) {
 
         setVideoState(VideoState.CURRENT_STATE_ORIGIN);
 
-        if (!TextUtils.isEmpty(this.url) && TextUtils.equals(this.url, url)) {
+        if (TextUtils.isEmpty(this.url)) {
+            Toast.makeText(context, "视频地址无效", Toast.LENGTH_SHORT).show();
             return false;
         }
+
         this.url = url;
         this.videoName = videoName;
 
@@ -249,39 +267,51 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         //自动缓冲，必须是wifi下,或者允许数据流量看视频,不能是视频列表
         if ((VideoUtils.isWifi() || dialogHolder.isPlayWithNotWifi())
-                && autoPrepare && isListVideo()) {
+                && autoPrepare && !isScreenList()) {
             prepareSource();
         }
 
         return true;
     }
 
-    /**
-     * 是否list播放
-     *
-     * @return
-     */
-    protected boolean isListVideo() {
-        return screenState != ScreenState.SCREEN_LAYOUT_LIST
-                && originScreenState != ScreenState.SCREEN_LAYOUT_LIST;
-    }
 
-    /**
-     * 直接全屏播放
-     *
-     * @param url
-     * @param videoName
-     */
     @Override
-    public void startFullscreen(String url, String videoName) {
-        Timber.d("直接全屏播放");
+    public void setUpFullscreen(String url, String videoName) {
+        Timber.d("锁定全屏播放");
 
         boolean setUp = setUp(url, videoName);
 
         if (setUp) {
-            setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
+            startWindowFullscreen(true);
         }
 
+    }
+
+    @Override
+    public void setUpInList(String url, String videoName) {
+        Timber.d("锁定全屏播放");
+
+        boolean setUp = setUp(url, videoName);
+
+        if (setUp) {
+            setScreenState(ScreenState.SCREEN_LAYOUT_LIST);
+        }
+    }
+
+    /**
+     * 给list 的小窗设置播放url
+     *
+     * @param url
+     * @param videoName
+     */
+    void setUpListTiny(String url, String videoName) {
+        Timber.d("小窗播放滑出屏幕的视频");
+
+        boolean setUp = setUp(url, videoName);
+
+        if (setUp) {
+            startWindowTiny(true);
+        }
     }
 
     /**
@@ -290,6 +320,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     @Override
     public void prepareSource() {
         Timber.d("准备播放源");
+
+        if (TextUtils.isEmpty(url)) {
+            Toast.makeText(context, "视频地址无效", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         initTextureView();
 
@@ -514,10 +549,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      *
      * @param state
      */
-    @Override
-    public void setVideoState(@VideoState.VideoStateValue int state) {
+    protected void setVideoState(@VideoState.VideoStateValue int state) {
         Timber.d("改变当前播放状态:%s", VideoState.getVideoStateName(state));
-
 
         switch (state) {
             case VideoState.CURRENT_STATE_ORIGIN:
@@ -559,7 +592,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         //显示预览
         if (state == VideoState.CURRENT_STATE_ORIGIN || state == VideoState.CURRENT_STATE_COMPLETE) {
-            videoPreview.showPreview(autoPrepare && isListVideo());
+            videoPreview.showPreview(autoPrepare && !isScreenList());
         } else {
             videoPreview.hidePreview();
         }
@@ -569,7 +602,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
             SimpleExoPlayer player = PlayerCore.instance(context).getPlayer();
 
-            if (!player.getPlayWhenReady() || screenState == ScreenState.SCREEN_LAYOUT_LIST || originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
+            if (!player.getPlayWhenReady() || isScreenList()) {
                 return;
             }
         }
@@ -595,8 +628,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      *
      * @param state
      */
-    @Override
-    public void setScreenState(@ScreenState.ScreenStateValue int state) {
+    protected void setScreenState(@ScreenState.ScreenStateValue int state) {
+        Timber.d("改变当前屏幕状态:%s", ScreenState.getScreenStateName(state));
 
         controlView.updateScreenState(state);
 
@@ -605,10 +638,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
                 break;
             case ScreenState.SCREEN_WINDOW_FULLSCREEN:
-                startWindowFullscreen(false);
+
                 break;
             case ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK:
-                startWindowFullscreen(true);
+
                 break;
             case ScreenState.SCREEN_WINDOW_TINY:
 
@@ -758,11 +791,21 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      */
     @Override
     public void startWindowTiny() {
+        startWindowTiny(false);
+    }
+
+    /**
+     * 小窗播放
+     */
+    protected void startWindowTiny(boolean isList) {
         Timber.i("小窗播放");
 
-        if (screenState != ScreenState.SCREEN_WINDOW_TINY && screenState != ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {
+        if (screenState != ScreenState.SCREEN_WINDOW_TINY
+                && screenState != ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK
+                && screenState != ScreenState.SCREEN_LAYOUT_LIST_TINY) {
 
-            if (videoState == VideoState.CURRENT_STATE_ORIGIN || videoState == VideoState.CURRENT_STATE_ERROR) {
+            if ((videoState == VideoState.CURRENT_STATE_ORIGIN
+                    || videoState == VideoState.CURRENT_STATE_ERROR) && !isList) {
                 return;
             }
 
@@ -793,7 +836,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
                         originScreenState = screenState;
 
-                        setScreenState(ScreenState.SCREEN_WINDOW_TINY);
+                        if (isList) {
+                            setScreenState(ScreenState.SCREEN_LAYOUT_LIST_TINY);
+                        } else {
+                            setScreenState(ScreenState.SCREEN_WINDOW_TINY);
+                        }
 
                         resume();
                     }
@@ -818,7 +865,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     public boolean backOriginWindow(boolean continuePlay) {
         Timber.i("退出全屏和小窗");
 
-        if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN || screenState == ScreenState.SCREEN_WINDOW_TINY) {
+        if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN
+                || screenState == ScreenState.SCREEN_WINDOW_TINY
+                || screenState == ScreenState.SCREEN_LAYOUT_LIST_TINY) {
 
             ViewGroup currentVP = (ViewGroup) getParent();
 
@@ -950,7 +999,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
     @Override
     public void onFullScreenClick() {
-        if (screenState == ScreenState.SCREEN_LAYOUT_ORIGIN) {
+        if (screenState == ScreenState.SCREEN_LAYOUT_ORIGIN || screenState == ScreenState.SCREEN_LAYOUT_LIST) {
             startWindowFullscreen(false);
         } else if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN) {
             backPress();
@@ -1012,16 +1061,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
 
     @Override
-    public int getScreenState() {
-        return screenState;
-    }
-
-    @Override
-    public int getCurrentState() {
-        return videoState;
-    }
-
-    @Override
     public void onTouchScreenEnd() {
         Timber.d("onTouchScreenEnd %s", hashCode());
 
@@ -1030,10 +1069,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
     @Override
     public void requestPrepareSourceData() {
+        Timber.i("requestPrepareSourceData:%s", ScreenState.getScreenStateName(screenState));
+
         // 在list中时，告诉所有播放器播放新视频的事件
-        if (screenState == ScreenState.SCREEN_LAYOUT_LIST
-                || originScreenState == ScreenState.SCREEN_LAYOUT_LIST) {
-            PlayerCore.instance(context).addListListener(this);
+        if (isScreenList()) {
+            PlayerCore.instance(context).notifyPlayNewVideoInList(this);
         }
 
         if (isBuffering()) {
@@ -1130,11 +1170,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 //                            stopAndReset();
 //
 //                            if (tinyWhenOutScreen) {
-//                                ListVideoUtils.startTinyWhenScrollOut(url, videoName, hashCode());
+//                                ListVideoHelper.startTinyWhenScrollOut(url, videoName, hashCode());
 //                            }
 //
 //                        } else if (tinyWhenOutScreen) {
-//                            ListVideoUtils.stopTinyWhenScrollIn(hashCode());
+//                            ListVideoHelper.stopTinyWhenScrollIn(hashCode());
 //                        }
 //                    }
 //                }
@@ -1207,32 +1247,42 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     public void onNewVideo() {
         Timber.i("播放新Video");
 
+        stopAndReset();
+
+        if (tinyWhenOutScreen && screenState != ScreenState.SCREEN_LAYOUT_LIST_TINY) {
+            ListVideoHelper.stopWhenNewVideoPlay();
+        }
+    }
+
+    /**
+     * 停止播放并且重置状态
+     */
+    void stopAndReset() {
+        backOriginWindow(false);
+
         if (videoState != VideoState.CURRENT_STATE_ORIGIN) {
             stop();
             unBindPlayer();
             setVideoState(VideoState.CURRENT_STATE_ORIGIN);
         }
-
-//        if (tinyWhenOutScreen) {
-//            ListVideoUtils.stopWhenNewVideoPlay();
-//        }
     }
 
 
     /**
      * 交换播放器，让画面在新的播放器继续播放
      */
-    public static void swapVideoPlayer(@lombok.NonNull VideoPlayer oldPlayer, @lombok.NonNull VideoPlayer newPlayer) {
+    public static void swapVideoPlayer(@lombok.NonNull VideoPlayer oldPlayer,
+                                       @lombok.NonNull VideoPlayer newPlayer,
+                                       @VideoState.VideoStateValue int videoState) {
 
-        boolean pause = oldPlayer.isPause();
-        newPlayer.setVideoState(oldPlayer.getVideoState());
+        newPlayer.setVideoState(videoState);
 
         oldPlayer.pause();
         oldPlayer.unBindPlayer();
         oldPlayer.setVideoState(VideoState.CURRENT_STATE_ORIGIN);
 
         newPlayer.bindPlayer();
-        if (pause) {
+        if (videoState == VideoState.CURRENT_STATE_PAUSE) {
             newPlayer.pause();
         } else {
             newPlayer.resume();
@@ -1250,7 +1300,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     public static void openTinyWhenOutScreen(@lombok.NonNull ViewGroup listView) {
         tinyWhenOutScreen = true;
 
-        ListVideoUtils.init(listView);
+        ListVideoHelper.init(listView);
+
+
     }
 
 }

@@ -79,8 +79,7 @@ public class VideoRecyclerAdapter extends RecyAdapter<VideoUrl> {
                     .override(320, 240)
                     .into(videoPlayer.getPreviewView());
 
-            videoPlayer.setScreenState(ScreenState.SCREEN_LAYOUT_LIST);
-            videoPlayer.setUp(itemData.getUrl(), itemData.getName());
+            videoPlayer.setUpInList(itemData.getUrl(), itemData.getName());
 
         }
     }

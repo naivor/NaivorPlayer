@@ -106,7 +106,7 @@ public class ControlTouchProcessor {
                             if (absDeltaX >= absDeltaY) {         //横向滑动
                                 if (absDeltaX >= THRESHOLD) {
                                     scrubbing = true;    //停止更新进度
-                                    if (onControllViewListener.getCurrentState() != VideoState.CURRENT_STATE_ERROR) {
+                                    if (onControllViewListener.getVideoState() != VideoState.CURRENT_STATE_ERROR) {
                                         mChangePosition = true;   //改变进度
                                         isActionProcessing = true;
                                     }

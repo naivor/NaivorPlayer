@@ -17,8 +17,6 @@
 package com.naivor.player.controll;
 
 import com.naivor.player.constant.OrientationState;
-import com.naivor.player.constant.ScreenState;
-import com.naivor.player.constant.VideoState;
 
 /**
  * 视频控制器
@@ -80,12 +78,20 @@ public interface VideoController extends PositionController, PlayController {
     boolean setUp(@lombok.NonNull String url, String videoName);
 
     /**
-     * 直接全屏播放
+     * 锁定全屏播放
      *
      * @param url
      * @param videoName
      */
-    void startFullscreen(String url, String videoName);
+    void setUpFullscreen(String url, String videoName);
+
+    /**
+     * 在list中播放
+     *
+     * @param url
+     * @param videoName
+     */
+    void setUpInList(String url, String videoName);
 
     /**
      * 准备播放器，初始化播放源
@@ -97,19 +103,6 @@ public interface VideoController extends PositionController, PlayController {
      */
     void onPrepared();
 
-    /**
-     * 改变当前播放状态
-     *
-     * @param state
-     */
-    void setVideoState(@VideoState.VideoStateValue int state);
-
-    /**
-     * 改变屏幕状态
-     *
-     * @param state
-     */
-    void setScreenState(@ScreenState.ScreenStateValue int state);
 
     /**
      * 全屏播放
@@ -126,20 +119,5 @@ public interface VideoController extends PositionController, PlayController {
      */
     boolean backOriginWindow();
 
-    /**
-     * 屏幕状态
-     *
-     * @return
-     */
-    @ScreenState.ScreenStateValue
-    int getScreenState();
-
-    /**
-     * 播放状态
-     *
-     * @return
-     */
-    @VideoState.VideoStateValue
-    int getCurrentState();
 }
 

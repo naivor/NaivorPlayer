@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package com.naivor.player.utils;
+package com.naivor.player;
 
 import android.app.Activity;
 import android.content.Context;
@@ -28,6 +28,7 @@ import android.widget.ListView;
 import com.naivor.player.R;
 import com.naivor.player.VideoPlayer;
 import com.naivor.player.constant.VideoState;
+import com.naivor.player.utils.VideoUtils;
 
 import java.lang.ref.SoftReference;
 
@@ -38,8 +39,15 @@ import timber.log.Timber;
  * Created by naivor on 17-7-27.
  */
 
-public final class ListVideoUtils {
+public final class ListVideoHelper {
     protected static SoftReference<VideoPlayer> reference;
+
+    protected static VideoPlayer playingPlayerInList;
+    protected static int playingPlayerInListPosition;
+    protected static String playingUrl;
+    protected static String playingName;
+    @VideoState.VideoStateValue
+    protected static int playingState;
 
     protected static int firstPos;
     protected static int lastPos;
@@ -68,6 +76,7 @@ public final class ListVideoUtils {
                     if (rootView != null) {
                         activity.getLayoutInflater().inflate(R.layout.list_tiny_window, (ViewGroup) rootView, true);
                         videoPlayer = (VideoPlayer) activity.findViewById(R.id.naivor_list_tiny_window);
+
                     }
                 }
 
@@ -98,21 +107,39 @@ public final class ListVideoUtils {
         int first = listView.getFirstVisiblePosition();
         int last = listView.getLastVisiblePosition();
 
-        Timber.v("ListView 滑动了，顶部：%s：%s,底部：%s :%s （原：新）", firstPos, first, lastPos, last);
+
+        Timber.v("ListView 滑动了,子控件数：%s，顶部：%s：%s,底部：%s :%s （原：新）", listView.getChildCount(), firstPos, first, lastPos, last);
 
         if (!isOrigin(first)) {
+
+            int bottomChildPosition = listView.getChildCount() - 1;
+
             if (first > firstPos || last > lastPos) {    //上滑，并且顶部上一个滑出屏幕，或者底部下一个滑入屏幕
-                if (first > firstPos) {
-                    processTopScrollOut(listView.getChildAt(firstPos), firstPos);
-                } else if (last > lastPos) {
-                    processBottomScrollIn(listView.getChildAt(last), last);
+
+                if (first > firstPos) {     // 顶部上一个滑出屏幕
+                    processTopScrollOut(firstPos);
+                    updatePlayingPlayerInList(listView.getChildAt(0), first);
+                }
+
+                if (last > lastPos) {   // 底部下一个滑入屏幕
+                    processBottomScrollIn(listView.getChildAt(bottomChildPosition), last);
                 }
 
             } else if (first < firstPos || last < lastPos) { //下滑，并且顶部上一个滑入屏幕，或者底部下一个滑出屏幕
-                if (first < firstPos) {
-                    processTopScrollIn(listView.getChildAt(first), first);
-                } else if (last < lastPos) {
-                    processBottomScrollOut(listView.getChildAt(lastPos), lastPos);
+
+                if (first < firstPos) {      // 顶部上一个滑入屏幕
+                    processTopScrollIn(listView.getChildAt(0), first);
+                }
+
+                if (last < lastPos) {   // 底部下一个滑出屏幕
+                    processBottomScrollOut(lastPos);
+                    updatePlayingPlayerInList(listView.getChildAt(bottomChildPosition), last);
+                }
+            } else {
+                updatePlayingPlayerInList(listView.getChildAt(0), first);  // 顶部
+
+                if (bottomChildPosition > 0) {
+                    updatePlayingPlayerInList(listView.getChildAt(bottomChildPosition), last);   // 底部
                 }
             }
         }
@@ -120,6 +147,30 @@ public final class ListVideoUtils {
         firstPos = first;
         lastPos = last;
 
+    }
+
+    /**
+     * 更新list中正在播放的Player
+     *
+     * @param childAt
+     * @param postion
+     */
+    protected static void updatePlayingPlayerInList(View childAt, int postion) {
+        Timber.v("更新list中正在播放的Player");
+
+        if (postion != playingPlayerInListPosition || playingPlayerInList == null) {
+            VideoPlayer listPlayer = findVideoPlayer(childAt);
+            if (listPlayer != null && listPlayer.isVideoInPlayState()) {
+
+                Timber.d("list中正在播放的Player位置：%s", postion);
+
+                playingPlayerInList = listPlayer;
+                playingPlayerInListPosition = postion;
+                playingUrl = listPlayer.getUrl();
+                playingName = listPlayer.getVideoName();
+                playingState = playingPlayerInList.getVideoState();
+            }
+        }
     }
 
     /**
@@ -147,11 +198,11 @@ public final class ListVideoUtils {
     /**
      * 顶部滑出
      *
-     * @param childAt
+     * @param position
      */
-    private static void processBottomScrollOut(View childAt, int position) {
+    private static void processBottomScrollOut(int position) {
         Timber.v("底部滑出,位置：%s", position);
-        processScrollOut(childAt, position);
+        processScrollOut(position);
     }
 
 
@@ -170,38 +221,33 @@ public final class ListVideoUtils {
     /**
      * 顶部滑出
      *
-     * @param childAt
+     * @param position
      */
-    private static void processTopScrollOut(View childAt, int position) {
+    private static void processTopScrollOut(int position) {
         Timber.v("顶部滑出,位置：%s", position);
 
-        processScrollOut(childAt, position);
+        processScrollOut(position);
     }
 
     /**
      * 处理滑出
      *
-     * @param childAt
+     * @param position
      */
-    private static void processScrollOut(View childAt, int position) {
+    private static void processScrollOut(int position) {
         Timber.v("处理滑出");
 
-        VideoPlayer listPlayer = findVideoPlayer(childAt);
-        if (listPlayer != null) {
-            Timber.v("处理滑出 111  %s", VideoState.getVideoStateName(listPlayer.getVideoState()));
-            if (listPlayer.isVideoInPlayState()) {
-                Timber.v("处理滑出 222");
-                VideoPlayer tinyPlayer = reference.get();
-                if (tinyPlayer != null) {
-                    Timber.v("处理滑出 333");
-                    tinyPlayer.setVisibility(View.VISIBLE);
+        if (playingPlayerInList != null && position == playingPlayerInListPosition) {
+            Timber.v("处理滑出 111  %s", VideoState.getVideoStateName(playingPlayerInList.getVideoState()));
+            VideoPlayer tinyPlayer = reference.get();
+            if (tinyPlayer != null) {
+                Timber.v("处理滑出 333");
 
-                    tinyPlayer.setUp(listPlayer.getUrl(), listPlayer.getVideoName());
-                    VideoPlayer.swapVideoPlayer(listPlayer, tinyPlayer);
+                tinyPlayer.setUpListTiny(playingUrl, playingName);
+                VideoPlayer.swapVideoPlayer(playingPlayerInList, tinyPlayer, playingState);
 
-                    Timber.i("打开小窗");
-                    tinyWindowPosition = position;
-                }
+                Timber.i("打开小窗");
+                tinyWindowPosition = position;
             }
         }
     }
@@ -217,22 +263,19 @@ public final class ListVideoUtils {
         if (tinyWindowPosition >= 0) {
             VideoPlayer tinyPlayer = reference.get();
             if (tinyPlayer != null) {
-                Timber.v("处理滑入 111  %s", VideoState.getVideoStateName(tinyPlayer.getVideoState()));
-                if (tinyPlayer.getVisibility() == View.VISIBLE && tinyPlayer.isVideoInPlayState()) {
+                Timber.v("处理滑入 111  %s,%s", tinyWindowPosition, position);
+                if (tinyPlayer.isShown() && tinyWindowPosition == position) {
                     Timber.v("处理滑入 222");
                     VideoPlayer listPlayer = findVideoPlayer(childAt);
-                    if (listPlayer != null) {
+                    if (listPlayer != null && tinyPlayer.isVideoInPlayState()) {
                         Timber.v("处理滑入 333 ,%s,%s", tinyWindowPosition, position);
-                        if (tinyWindowPosition == position) {
-                            Timber.v("处理滑入 555");
-                            tinyPlayer.setVisibility(View.GONE);
-
-                            VideoPlayer.swapVideoPlayer(tinyPlayer, listPlayer);
-
-                            Timber.i("退出小窗");
-                            tinyWindowPosition = -1;
-                        }
+                        VideoPlayer.swapVideoPlayer(tinyPlayer, listPlayer, tinyPlayer.getVideoState());
                     }
+
+                    tinyPlayer.stopAndReset();
+
+                    Timber.i("退出小窗");
+                    tinyWindowPosition = -1;
                 }
             }
         }
@@ -264,65 +307,21 @@ public final class ListVideoUtils {
     }
 
 
-//    /**
-//     * 当滑出屏幕时，小窗播放滑出屏幕的视频
-//     *
-//     * @param url
-//     * @param title
-//     */
-//    public static void startTinyWhenScrollOut(@NonNull String url, @NonNull String title, int playerID) {
-//        Timber.v("滑出屏幕，小窗播放");
-//
-//        if (!isOpendInTiny) {
-//
-//            VideoPlayer videoPlayer = reference.get();
-//
-//            if (videoPlayer != null) {
-//
-//                Timber.d("小窗播放,url:%s,name:%s,id:%s", url, title, playerID);
-//
-//                videoPlayer.setVisibility(View.VISIBLE);
-//
-//                videoPlayer.setScreenState(ScreenState.SCREEN_WINDOW_TINY);
-//                videoPlayer.setUp(url, title);
-//                videoPlayer.start();
-//
-//                currentTinyPlayer = playerID;
-//                isOpendInTiny = true;
-//            }
-//        }
-//    }
-//
-//    /**
-//     * 当滑入屏幕时，停止播放并退出小窗
-//     */
-//    public static void stopTinyWhenScrollIn(int playerID) {
-//        Timber.v("滑入屏幕，退出小窗");
-//
-//        if (isOpendInTiny && currentTinyPlayer == playerID) {
-//
-//            VideoPlayer videoPlayer = reference.get();
-//
-//            if (videoPlayer != null) {
-//
-//                Timber.d("退出小窗,id:%s", playerID);
-//
-//                if (videoPlayer.getScreenState() == ScreenState.SCREEN_WINDOW_TINY) {
-//                    videoPlayer.setVisibility(View.GONE);
-//
-//                    videoPlayer.stopAndReset();
-//                }
-//
-//                isOpendInTiny = false;
-//            }
-//        }
-//    }
-//
-//    /**
-//     * 播放新视频的时候，退出小窗
-//     */
-//    public static void stopWhenNewVideoPlay() {
-//        Timber.d("播放新视频，退出小窗");
-//        stopTinyWhenScrollIn(currentTinyPlayer);
-//    }
+    /**
+     * 播放新视频的时候，退出小窗
+     */
+    public static void stopWhenNewVideoPlay() {
+        Timber.d("播放新视频，退出小窗");
+
+        if (tinyWindowPosition >= 0) {
+            VideoPlayer tinyPlayer = reference.get();
+            if (tinyPlayer != null && tinyPlayer.getVisibility() == View.VISIBLE) {
+
+                tinyPlayer.stopAndReset();
+
+                Timber.i("退出小窗");
+                tinyWindowPosition = -1;
+            }
+        }
+    }
 }

@@ -30,17 +30,18 @@ import java.lang.annotation.RetentionPolicy;
 public final class ScreenState {
 
     public static final int SCREEN_LAYOUT_ORIGIN = 0;
-    public static final int SCREEN_LAYOUT_LIST = 1;
-    public static final int SCREEN_WINDOW_FULLSCREEN = 2;
-    public static final int SCREEN_WINDOW_FULLSCREEN_LOCK = 3;
-    public static final int SCREEN_WINDOW_TINY = 4;
+    public static final int SCREEN_WINDOW_FULLSCREEN = 1;
+    public static final int SCREEN_WINDOW_FULLSCREEN_LOCK = 2;
+    public static final int SCREEN_WINDOW_TINY = 3;
+    public static final int SCREEN_LAYOUT_LIST = 4;
+    public static final int SCREEN_LAYOUT_LIST_TINY = 5;
 
 
     /**
      * 屏幕窗口
      */
     @IntDef({SCREEN_LAYOUT_ORIGIN, SCREEN_LAYOUT_LIST, SCREEN_WINDOW_FULLSCREEN, SCREEN_WINDOW_FULLSCREEN_LOCK,
-            SCREEN_WINDOW_TINY})
+            SCREEN_WINDOW_TINY, SCREEN_LAYOUT_LIST_TINY})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ScreenStateValue {
     }
@@ -73,6 +74,9 @@ public final class ScreenState {
                 break;
             case SCREEN_WINDOW_TINY:
                 stateName = "小窗";
+                break;
+            case SCREEN_LAYOUT_LIST_TINY:
+                stateName = "列表的小窗";
                 break;
 
             default:

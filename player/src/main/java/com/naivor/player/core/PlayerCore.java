@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import lombok.NonNull;
+import timber.log.Timber;
 
 /**
  * 播放器核心
@@ -72,7 +73,7 @@ public final class PlayerCore {
     private static PlayerCore playerCore;
 
     //list播放用到
-    protected Set<VideoLayoutListListener> listListeners;
+    protected Set<OnListVideoPlayListener> listListeners;
 
 
     /**
@@ -121,10 +122,12 @@ public final class PlayerCore {
 
 
     /**
-     * 准备视频
+     * 通知list监听器，监听新视频播放
      */
-    public void addListListener(VideoLayoutListListener listListener) {
-        for (VideoLayoutListListener l : listListeners) {
+    public void notifyPlayNewVideoInList(@NonNull OnListVideoPlayListener listListener) {
+        Timber.i("添加list监听器，监听新视频播放");
+
+        for (OnListVideoPlayListener l : listListeners) {
             if (l != listListener) {
                 l.onNewVideo();
 
@@ -142,6 +145,8 @@ public final class PlayerCore {
      * 准备视频
      */
     public void prepare() {
+        Timber.i("准备视频");
+
         if (player == null) {
             createPlayer(context);
         }

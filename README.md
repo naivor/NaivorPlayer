@@ -22,7 +22,7 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 2. 添加view (宽高按需要)
 
    ```
-    <com.naivor.player.VideoPlayer
+    <VideoPlayerNewVideoPlay
            android:id="@+id/videoPlayer"
            android:layout_width="match_parent"
            android:layout_height="240dp" />

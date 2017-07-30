@@ -99,6 +99,8 @@ public class ControlViewHolder {
     public void updateVideoState(@ScreenState.ScreenStateValue int videoState) {
         this.videoState = videoState;
 
+        Timber.d("更新播放状态:%s", VideoState.getVideoStateName(videoState));
+
         switch (videoState) {
             case VideoState.CURRENT_STATE_ORIGIN:
                 reset();
@@ -142,6 +144,8 @@ public class ControlViewHolder {
      */
     public void updateScreenState(@ScreenState.ScreenStateValue int screenState) {
         this.screenState = screenState;
+
+        Timber.d("更新屏幕状态:%s", ScreenState.getScreenStateName(screenState));
 
         if (fullScreenBtn != null) {
             if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {
@@ -187,8 +191,8 @@ public class ControlViewHolder {
         Timber.d("显示");
 
         if (topLayout != null) {
-            if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN ||
-                    screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {  //全屏显示标题栏
+            if (screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN
+                    || screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK) {  //全屏显示标题栏
 
                 topLayout.setVisibility(View.VISIBLE);
 
@@ -198,13 +202,23 @@ public class ControlViewHolder {
                 if (rlTiny != null) {
                     rlTiny.setVisibility(View.GONE);
                 }
-            } else if (screenState == ScreenState.SCREEN_WINDOW_TINY) {  //小窗显示标题栏
+            } else if (screenState == ScreenState.SCREEN_WINDOW_TINY
+                    || screenState == ScreenState.SCREEN_LAYOUT_LIST_TINY) {  //小窗显示标题栏
+
                 topLayout.setVisibility(View.VISIBLE);
+
                 if (llTitle != null) {
                     llTitle.setVisibility(View.GONE);
                 }
                 if (rlTiny != null) {
                     rlTiny.setVisibility(View.VISIBLE);
+
+                    if (tinyExitBtn != null)
+                        if (screenState == ScreenState.SCREEN_LAYOUT_LIST_TINY) {
+                            tinyExitBtn.setVisibility(View.GONE);
+                        } else {
+                            tinyExitBtn.setVisibility(View.VISIBLE);
+                        }
                 }
             } else {
                 topLayout.setVisibility(View.GONE);
@@ -213,7 +227,7 @@ public class ControlViewHolder {
         }
 
         if (buttomLayout != null) {
-            if (screenState == ScreenState.SCREEN_WINDOW_TINY) {  //小窗隐藏底部控制栏
+            if (screenState == ScreenState.SCREEN_WINDOW_TINY || screenState == ScreenState.SCREEN_LAYOUT_LIST_TINY) {  //小窗隐藏底部控制栏
                 buttomLayout.setVisibility(View.GONE);
             } else {
                 buttomLayout.setVisibility(View.VISIBLE);

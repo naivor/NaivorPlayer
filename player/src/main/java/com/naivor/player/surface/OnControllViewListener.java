@@ -90,7 +90,7 @@ public interface OnControllViewListener {
      * @return
      */
     @VideoState.VideoStateValue
-    int getCurrentState();
+    int getVideoState();
 
     /**
      * 结束触碰屏幕

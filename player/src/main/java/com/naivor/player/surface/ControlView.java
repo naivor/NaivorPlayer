@@ -309,7 +309,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
         boolean hide = false;
 
         if (onControllViewListener != null) {
-            hide = onControllViewListener.getCurrentState() != VideoState.CURRENT_STATE_PLAYING;
+            hide = onControllViewListener.getVideoState() != VideoState.CURRENT_STATE_PLAYING;
         }
 
         return hide;
@@ -868,7 +868,7 @@ public class ControlView extends FrameLayout implements PlayController, Position
             if (onControllViewListener != null) {
                 onControllViewListener.onclick(view);
 
-                int state = onControllViewListener.getCurrentState();
+                int state = onControllViewListener.getVideoState();
 
                 isPause = state == VideoState.CURRENT_STATE_PAUSE;
                 isComplete = state == VideoState.CURRENT_STATE_COMPLETE;

@@ -22,7 +22,7 @@ package com.naivor.player.core;
  * Created by naivor on 17-7-26.
  */
 
-public interface VideoLayoutListListener {
+public interface OnListVideoPlayListener {
 
     /**
      * 播放新的视频
