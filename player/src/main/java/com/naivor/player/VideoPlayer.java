@@ -151,10 +151,10 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     //小窗的宽高
     @Getter
     @Setter
-    protected int tinyWidth;
+    protected static int tinyWidth;
     @Getter
     @Setter
-    protected int tinyHeight;
+    protected static int tinyHeight;
 
 
     //监听音频焦点

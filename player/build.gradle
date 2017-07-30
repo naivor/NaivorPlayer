@@ -55,7 +55,10 @@ publish {
     userOrg = 'naivor'
     groupId = 'com.naivor'
     artifactId = 'player'
-    publishVersion = '1.1.0'
+    publishVersion = '1.1.1'
     desc = 'A easy use player based Exoplayer whit beautiful UI'
     website = 'https://github.com/naivor/NaivorPlayer'      // 项目的主页
+
+    // 上传命令
+    // ./gradlew clean build bintrayUpload -PbintrayUser=BINTRAY_USERNAME -PbintrayKey=BINTRAY_KEY -PdryRun=false
 }

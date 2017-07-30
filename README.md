@@ -1,6 +1,6 @@
  ![naivorplayer_cover](https://github.com/naivor/NaivorPlayer/blob/master/doc/naivorplayer_cover.png)
 
-![palform](https://img.shields.io/badge/palform-android-orange.svg)    ![luanguage](https://img.shields.io/badge/luanguage-java-09BCA4.svg)   [![Build Status](https://travis-ci.org/naivor/NaivorPlayer.svg?branch=master)](https://travis-ci.org/naivor/NaivorPlayer)    ![release](https://img.shields.io/badge/release-1.0.1-green.svg)     [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)     ![license](https://img.shields.io/badge/license-Apache%202.0-BC0962.svg)      ![author](https://img.shields.io/badge/%E4%BD%9C%E8%80%85-naivor-blue.svg)
+![palform](https://img.shields.io/badge/palform-android-orange.svg)    ![luanguage](https://img.shields.io/badge/luanguage-java-09BCA4.svg)   [![Build Status](https://travis-ci.org/naivor/NaivorPlayer.svg?branch=master)](https://travis-ci.org/naivor/NaivorPlayer)    ![release](https://img.shields.io/badge/release-1.1.1-green.svg)     [![API](https://img.shields.io/badge/API-16%2B-brightgreen.svg?style=flat)](https://android-arsenal.com/api?level=16)     ![license](https://img.shields.io/badge/license-Apache%202.0-BC0962.svg)      ![author](https://img.shields.io/badge/%E4%BD%9C%E8%80%85-naivor-blue.svg)
 
 
 ## **简介**
@@ -16,7 +16,7 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 1. 将 naivorplayer 加入项目
 
    ```
-   compile 'com.naivor:player:1.0.1'
+   compile 'com.naivor:player:1.1.1'
    ```
 
 2. 添加view (宽高按需要)
@@ -53,8 +53,9 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 
      ```
      //一般来说开启自动缓冲，就会把视频的第一帧作为封面，亦可以自己设置封面，有下面两种方式
-     1.videoPlayer.getPreviewView() //能拿到显示封面的ImageView，给它加载图片就是了
-     2.videoPlayer.setPreviewImage(bitmap); //将封面的Bitmap传入
+     1. videoPlayer.getPreviewView() //能拿到显示封面的ImageView，给它加载图片就是了
+
+     2. videoPlayer.setPreviewImage(bitmap); //将封面的Bitmap传入
      ```
 
    * 开启小窗播放
@@ -63,8 +64,28 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
       videoPlayer.startWindowTiny();  //退出小窗调用 videoPlayer.backOriginWindow();
      ```
 
+   * 在List中播放
 
+     ```
+     // 在onCreate 方法中 设置：
+     1. VideoPlayer.playVideoInList(listview,false); //这里的listview既可是ListView,也可以是RecyclerView（用LinearLayoutManager）
+      
+     2. VideoPlayer.playVideoInList(listview,true); // 正在播放的视频滑出屏幕时自动开启小窗继续播放
+      
+     ....
+      
+     //在onDestroy方法中
+     VideoPlayer.releaseAll();
+     ```
 
+   * 可自定义小窗大小
+
+     ```
+     VideoPlayer.setTinyWidth(tinyWidth);
+     VideoPlayer.setTinyHeight(tinyHeight);
+     ```
+
+     ​
 
 
 
@@ -88,8 +109,19 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 
   ​				![normal_play](https://github.com/naivor/NaivorPlayer/blob/master/doc/tiny_screen.gif)
 
+* 列表
 
+  * Listview
 
+    ![play_video_in_ListView](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_ListView.gif)
+
+    ![play_video_in_ListView_tiny_when_scrollOut](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_ListView_tiny_when_scrollOut.gif)
+
+  * RecyclerView
+
+    ![play_video_in_RecyclerView](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_RecyclerView.gif)
+
+    ![play_video_in_RecyclerView_tiny_when_scrollOut](https://github.com/naivor/NaivorPlayer/blob/master/doc/play_video_in_RecyclerView_tiny_when_scrollOut.gif)
 
 
 

@@ -388,7 +388,9 @@ public final class ListVideoHelper {
      * 清理资源
      */
     public static void release() {
-        reference.clear();
+        if (reference != null) {
+            reference.clear();
+        }
         reference = null;
         tinyWhenOutScreen = false;
         playInList = false;

@@ -46,7 +46,7 @@ public class RecyclerViewVideoActivity extends AppCompatActivity {
         actionBar.setTitle(getIntent().getStringExtra(EXTRA));
 
         // 设置在List中播放视频，list容器view，是否滑出屏幕自动小窗播放
-        VideoPlayer.playVideoInList(rvContent, false);
+        VideoPlayer.playVideoInList(rvContent, true);
 
         rvContent.setLayoutManager(new LinearLayoutManager(context));
         recyclerAdapter = new VideoRecyclerAdapter(context);
@@ -70,9 +70,8 @@ public class RecyclerViewVideoActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-
+    protected void onDestroy() {
+        super.onDestroy();
         VideoPlayer.releaseAll();
     }
 }
