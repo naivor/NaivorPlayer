@@ -54,7 +54,6 @@ public class VideoPreview {
     public void showPreview(boolean showFirstFrame) {
         Timber.d("显示预览");
         if (preview != null && showPreview) {
-
             if (showFirstFrame) {
                 Timber.d("显示第一帧");
                 setPreviewFromBitmap(defaultPreview);

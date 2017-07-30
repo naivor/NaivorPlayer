@@ -19,7 +19,6 @@ package com.naivor.player.utils;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
-import android.graphics.Rect;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -28,7 +27,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ContextThemeWrapper;
 import android.text.TextUtils;
-import android.view.View;
 import android.view.WindowManager;
 
 import java.util.Formatter;
@@ -59,22 +57,6 @@ public final class VideoUtils {
     public static float getScreenDensity() {
 
         return Utils.context().getResources().getDisplayMetrics().density;
-    }
-
-    /**
-     * 判断view是否在屏幕内
-     *
-     * @param view
-     */
-    public static boolean isViewInScreen(@NonNull View view) {
-        Rect rect = new Rect();
-        view.getGlobalVisibleRect(rect);
-
-        if (rect.top > 0) {       // 可见及部分可见
-            return true;
-        } else {         //全部不可见时为0，不会出现负值
-            return false;
-        }
     }
 
 

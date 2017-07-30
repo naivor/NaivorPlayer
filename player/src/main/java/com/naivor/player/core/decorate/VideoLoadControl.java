@@ -63,11 +63,14 @@ public final class VideoLoadControl implements LoadControl {
                 DEFAULT_BUFFER_FOR_PLAYBACK_MS, DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS);
     }
 
-    public VideoLoadControl(DefaultAllocator allocator, int minBufferMs, int maxBufferMs, long bufferForPlaybackMs, long bufferForPlaybackAfterRebufferMs) {
-        this(allocator, minBufferMs, maxBufferMs, bufferForPlaybackMs, bufferForPlaybackAfterRebufferMs, (PriorityTaskManager) null);
+    public VideoLoadControl(DefaultAllocator allocator, int minBufferMs, int maxBufferMs,
+                            long bufferForPlaybackMs, long bufferForPlaybackAfterRebufferMs) {
+        this(allocator, minBufferMs, maxBufferMs, bufferForPlaybackMs,
+                bufferForPlaybackAfterRebufferMs, (PriorityTaskManager) null);
     }
 
-    public VideoLoadControl(DefaultAllocator allocator, int minBufferMs, int maxBufferMs, long bufferForPlaybackMs, long bufferForPlaybackAfterRebufferMs, PriorityTaskManager priorityTaskManager) {
+    public VideoLoadControl(DefaultAllocator allocator, int minBufferMs, int maxBufferMs,
+                            long bufferForPlaybackMs, long bufferForPlaybackAfterRebufferMs, PriorityTaskManager priorityTaskManager) {
         this.allocator = allocator;
         this.minBufferUs = (long) minBufferMs * 1000L;
         this.maxBufferUs = (long) maxBufferMs * 1000L;
@@ -147,7 +150,8 @@ public final class VideoLoadControl implements LoadControl {
             int bufferTimeState = this.getBufferTimeState(bufferedDurationUs);
             boolean targetBufferSizeReached = this.allocator.getTotalBytesAllocated() >= this.targetBufferSize;
             boolean wasBuffering = this.isBuffering;
-            this.isBuffering = bufferTimeState == BELOW_LOW_WATERMARK || bufferTimeState == BETWEEN_WATERMARKS && this.isBuffering && !targetBufferSizeReached;
+            this.isBuffering = bufferTimeState == BELOW_LOW_WATERMARK
+                    || bufferTimeState == BETWEEN_WATERMARKS && this.isBuffering && !targetBufferSizeReached;
             if (this.priorityTaskManager != null && this.isBuffering != wasBuffering) {
                 if (this.isBuffering) {
                     this.priorityTaskManager.add(0);
@@ -166,7 +170,8 @@ public final class VideoLoadControl implements LoadControl {
      * @return
      */
     private int getBufferTimeState(long bufferedDurationUs) {
-        return bufferedDurationUs > this.maxBufferUs ? ABOVE_HIGH_WATERMARK : (bufferedDurationUs < this.minBufferUs ? BELOW_LOW_WATERMARK : BETWEEN_WATERMARKS);
+        return bufferedDurationUs > this.maxBufferUs ? ABOVE_HIGH_WATERMARK
+                : (bufferedDurationUs < this.minBufferUs ? BELOW_LOW_WATERMARK : BETWEEN_WATERMARKS);
     }
 
 
@@ -193,4 +198,5 @@ public final class VideoLoadControl implements LoadControl {
     public void setLoadControl(LoadControl loadControl) {
         this.loadControl = loadControl;
     }
+
 }

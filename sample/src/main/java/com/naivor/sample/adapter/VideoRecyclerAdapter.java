@@ -26,7 +26,6 @@ import com.naivor.adapter.AdapterOperator;
 import com.naivor.adapter.RecyAdapter;
 import com.naivor.adapter.RecyHolder;
 import com.naivor.player.VideoPlayer;
-import com.naivor.player.constant.ScreenState;
 import com.naivor.sample.R;
 import com.naivor.sample.data.DataRepo;
 import com.naivor.sample.data.VideoUrl;
@@ -54,6 +53,9 @@ public class VideoRecyclerAdapter extends RecyAdapter<VideoUrl> {
         return R.layout.item_video;
     }
 
+    /**
+     * VideoRecyclerHolder
+     */
     public static class VideoRecyclerHolder extends RecyHolder<VideoUrl> {
 
         @BindView(R.id.videoPlayer)
@@ -79,7 +81,7 @@ public class VideoRecyclerAdapter extends RecyAdapter<VideoUrl> {
                     .override(320, 240)
                     .into(videoPlayer.getPreviewView());
 
-            videoPlayer.setUpInList(itemData.getUrl(), itemData.getName());
+            videoPlayer.setUp(itemData.getUrl(), itemData.getName());
 
         }
     }

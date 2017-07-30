@@ -45,7 +45,8 @@ public class RecyclerViewVideoActivity extends AppCompatActivity {
         actionBar.setDisplayUseLogoEnabled(false);
         actionBar.setTitle(getIntent().getStringExtra(EXTRA));
 
-        VideoPlayer.openTinyWhenOutScreen(rvContent);
+        // 设置在List中播放视频，list容器view，是否滑出屏幕自动小窗播放
+        VideoPlayer.playVideoInList(rvContent, false);
 
         rvContent.setLayoutManager(new LinearLayoutManager(context));
         recyclerAdapter = new VideoRecyclerAdapter(context);
@@ -66,5 +67,12 @@ public class RecyclerViewVideoActivity extends AppCompatActivity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        VideoPlayer.releaseAll();
     }
 }

@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             Timer timer = new Timer();
-            if (isExitApp == false) {
+            if (!isExitApp) {
                 isExitApp = true;
                 ToastUtil.show("再按一次退出");
                 timer.schedule(new TimerTask() {

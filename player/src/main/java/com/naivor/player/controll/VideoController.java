@@ -86,14 +86,6 @@ public interface VideoController extends PositionController, PlayController {
     void setUpFullscreen(String url, String videoName);
 
     /**
-     * 在list中播放
-     *
-     * @param url
-     * @param videoName
-     */
-    void setUpInList(String url, String videoName);
-
-    /**
      * 准备播放器，初始化播放源
      */
     void prepareSource();

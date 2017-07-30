@@ -21,14 +21,6 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import static com.naivor.player.constant.VideoState.CURRENT_STATE_COMPLETE;
-import static com.naivor.player.constant.VideoState.CURRENT_STATE_ERROR;
-import static com.naivor.player.constant.VideoState.CURRENT_STATE_ORIGIN;
-import static com.naivor.player.constant.VideoState.CURRENT_STATE_PAUSE;
-import static com.naivor.player.constant.VideoState.CURRENT_STATE_PLAYING;
-import static com.naivor.player.constant.VideoState.CURRENT_STATE_PLAYING_BUFFERING;
-import static com.naivor.player.constant.VideoState.CURRENT_STATE_PREPARING;
-
 /**
  * 全屏时视频方向，如横屏，竖屏
  * <p>

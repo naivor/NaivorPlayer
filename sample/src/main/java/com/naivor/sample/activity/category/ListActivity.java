@@ -9,10 +9,8 @@ import android.view.View;
 import android.widget.Button;
 
 import com.naivor.sample.R;
-import com.naivor.sample.activity.MainActivity;
 import com.naivor.sample.activity.category.list.ListVideoActivity;
 import com.naivor.sample.activity.category.list.RecyclerViewVideoActivity;
-import com.naivor.sample.utils.ToastUtil;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

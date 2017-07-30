@@ -46,8 +46,6 @@ import com.naivor.sample.R;
 import com.naivor.sample.activity.MainActivity;
 import com.naivor.sample.data.DataRepo;
 
-import timber.log.Timber;
-
 
 /**
  * ExoPlayer原生使用方式

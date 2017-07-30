@@ -41,9 +41,9 @@ import timber.log.Timber;
  */
 
 public class ControlViewHolder {
-    public static int RES_VIDEO_PLAY = R.drawable.ic_play_selector;
-    public static int RES_VIDEO_PAUSE = R.drawable.ic_pause_selector;
-    public static int RES_VIDEO_ERROR = R.drawable.ic_error_selector;
+    protected static int RES_VIDEO_PLAY = R.drawable.ic_play_selector;
+    protected static int RES_VIDEO_PAUSE = R.drawable.ic_pause_selector;
+    protected static int RES_VIDEO_ERROR = R.drawable.ic_error_selector;
 
     protected View rootView;
 
@@ -213,12 +213,13 @@ public class ControlViewHolder {
                 if (rlTiny != null) {
                     rlTiny.setVisibility(View.VISIBLE);
 
-                    if (tinyExitBtn != null)
+                    if (tinyExitBtn != null) {
                         if (screenState == ScreenState.SCREEN_LAYOUT_LIST_TINY) {
                             tinyExitBtn.setVisibility(View.GONE);
                         } else {
                             tinyExitBtn.setVisibility(View.VISIBLE);
                         }
+                    }
                 }
             } else {
                 topLayout.setVisibility(View.GONE);

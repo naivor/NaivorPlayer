@@ -56,7 +56,7 @@ import static com.google.android.exoplayer2.C.TYPE_SS;
 
 public final class SourceUtils {
 
-    public static Handler mainHandler = new Handler();
+    protected static Handler mainHandler = new Handler();
 
     private SourceUtils() {
     }

@@ -18,6 +18,7 @@ package com.naivor.player;
 
 import android.app.Activity;
 import android.content.Context;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,9 +26,8 @@ import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.ListView;
 
-import com.naivor.player.R;
-import com.naivor.player.VideoPlayer;
 import com.naivor.player.constant.VideoState;
+import com.naivor.player.core.PlayerCore;
 import com.naivor.player.utils.VideoUtils;
 
 import java.lang.ref.SoftReference;
@@ -36,11 +36,20 @@ import lombok.NonNull;
 import timber.log.Timber;
 
 /**
+ * 在List中播放Video的辅助类
+ * <p>
  * Created by naivor on 17-7-27.
  */
 
 public final class ListVideoHelper {
     protected static SoftReference<VideoPlayer> reference;
+
+    protected static Context context;
+
+    //是否开启小窗当播放器滑出屏幕的时候（仅在list中有用）
+    protected static boolean tinyWhenOutScreen = false;
+    protected static boolean playInList = false;
+
 
     protected static VideoPlayer playingPlayerInList;
     protected static int playingPlayerInListPosition;
@@ -54,6 +63,9 @@ public final class ListVideoHelper {
 
     protected static int tinyWindowPosition;
 
+    private ListVideoHelper() {
+    }
+
     /**
      * 初始化
      *
@@ -61,13 +73,16 @@ public final class ListVideoHelper {
      */
     public static void init(@NonNull final ViewGroup listView) {
 
-        firstPos = lastPos = tinyWindowPosition = -1;
+        tinyWindowPosition = -1;
+        firstPos = lastPos;
+        lastPos = tinyWindowPosition;
 
-        Context context = listView.getContext();
+        Context activityContext = listView.getContext();
 
-        if (context != null) {
-            Activity activity = VideoUtils.getActivity(context);
-            if (activity != null) {
+        if (activityContext != null) {
+            context = activityContext.getApplicationContext();
+            Activity activity = VideoUtils.getActivity(activityContext);
+            if (activity != null && tinyWhenOutScreen) {
                 VideoPlayer videoPlayer = (VideoPlayer) activity.findViewById(R.id.naivor_list_tiny_window);
 
                 if (videoPlayer == null) {
@@ -82,19 +97,20 @@ public final class ListVideoHelper {
 
                 reference = new SoftReference<>(videoPlayer);
 
-
-                listView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
-                    @Override
-                    public void onScrollChanged() {
-                        if (listView instanceof RecyclerView) {
-                            processRecyclerScroll((RecyclerView) listView);
-                        } else if (listView instanceof ListView) {
-                            processListViewScroll((ListView) listView);
-                        }
-                    }
-                });
-
             }
+
+            listView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+                @Override
+                public void onScrollChanged() {
+                    if (listView instanceof RecyclerView) {
+                        processRecyclerScroll((RecyclerView) listView);
+                    } else if (listView instanceof ListView) {
+                        processListViewScroll((ListView) listView);
+                    } else {
+                        processOtherScroll(listView);
+                    }
+                }
+            });
         }
     }
 
@@ -106,13 +122,57 @@ public final class ListVideoHelper {
     protected static void processListViewScroll(ListView listView) {
         int first = listView.getFirstVisiblePosition();
         int last = listView.getLastVisiblePosition();
+        int visibleCount = listView.getChildCount();
 
+        Timber.v("ListView 滑动了,子控件数：%s，顶部：%s：%s,底部：%s :%s （原：新）", visibleCount,
+                firstPos, first, lastPos, last);
 
-        Timber.v("ListView 滑动了,子控件数：%s，顶部：%s：%s,底部：%s :%s （原：新）", listView.getChildCount(), firstPos, first, lastPos, last);
+        processScrollEvent(listView, first, last, visibleCount);
 
+    }
+
+    /**
+     * @param listView
+     */
+
+    protected static void processRecyclerScroll(RecyclerView listView) {
+        RecyclerView.LayoutManager layoutManager = listView.getLayoutManager();
+
+        if (layoutManager instanceof LinearLayoutManager) {
+            LinearLayoutManager linearLayoutManager = (LinearLayoutManager) layoutManager;
+
+            int first = linearLayoutManager.findFirstVisibleItemPosition();
+            int last = linearLayoutManager.findLastVisibleItemPosition();
+
+            int visibleCount = listView.getChildCount();
+            Timber.v("RecyclerView 滑动了,子控件数：%s，顶部：%s：%s,底部：%s :%s （原：新）",
+                    visibleCount, firstPos, first, lastPos, last);
+
+            processScrollEvent(listView, first, last, visibleCount);
+        }
+    }
+
+    /**
+     * 其他容器控件中播放 Video 的处理，扩展用
+     *
+     * @param listView
+     */
+    protected static void processOtherScroll(ViewGroup listView) {
+        Timber.v(" 其他容器控件中播放 Video 的处理，待扩展 ");
+    }
+
+    /**
+     * 处理滑动事件
+     *
+     * @param listView
+     * @param first
+     * @param last
+     * @param visibleCount
+     */
+    protected static void processScrollEvent(ViewGroup listView, int first, int last, int visibleCount) {
         if (!isOrigin(first)) {
 
-            int bottomChildPosition = listView.getChildCount() - 1;
+            int bottomChildPosition = visibleCount - 1;
 
             if (first > firstPos || last > lastPos) {    //上滑，并且顶部上一个滑出屏幕，或者底部下一个滑入屏幕
 
@@ -146,7 +206,6 @@ public final class ListVideoHelper {
 
         firstPos = first;
         lastPos = last;
-
     }
 
     /**
@@ -238,16 +297,21 @@ public final class ListVideoHelper {
         Timber.v("处理滑出");
 
         if (playingPlayerInList != null && position == playingPlayerInListPosition) {
-            Timber.v("处理滑出 111  %s", VideoState.getVideoStateName(playingPlayerInList.getVideoState()));
-            VideoPlayer tinyPlayer = reference.get();
-            if (tinyPlayer != null) {
-                Timber.v("处理滑出 333");
+            if (tinyWhenOutScreen) {
+                VideoPlayer tinyPlayer = reference.get();
+                if (tinyPlayer != null) {
+                    VideoPlayer.swapVideoPlayer(playingPlayerInList, tinyPlayer, playingState, playingUrl, playingName);
 
-                tinyPlayer.setUpListTiny(playingUrl, playingName);
-                VideoPlayer.swapVideoPlayer(playingPlayerInList, tinyPlayer, playingState);
+                    Timber.i("打开小窗");
+                    tinyWindowPosition = position;
+                }
+            } else {
+                Timber.i("停止播放");
 
-                Timber.i("打开小窗");
-                tinyWindowPosition = position;
+                playingPlayerInList.stopAndReset();
+                PlayerCore.instance(context).release();
+
+                tinyWindowPosition = -1;
             }
         }
     }
@@ -260,16 +324,20 @@ public final class ListVideoHelper {
     private static void processScrollIn(View childAt, int position) {
         Timber.v("处理滑入");
 
-        if (tinyWindowPosition >= 0) {
+        if (tinyWindowPosition >= 0 && tinyWhenOutScreen) {
             VideoPlayer tinyPlayer = reference.get();
             if (tinyPlayer != null) {
-                Timber.v("处理滑入 111  %s,%s", tinyWindowPosition, position);
                 if (tinyPlayer.isShown() && tinyWindowPosition == position) {
-                    Timber.v("处理滑入 222");
                     VideoPlayer listPlayer = findVideoPlayer(childAt);
                     if (listPlayer != null && tinyPlayer.isVideoInPlayState()) {
-                        Timber.v("处理滑入 333 ,%s,%s", tinyWindowPosition, position);
-                        VideoPlayer.swapVideoPlayer(tinyPlayer, listPlayer, tinyPlayer.getVideoState());
+                        VideoPlayer.swapVideoPlayer(tinyPlayer, listPlayer, tinyPlayer.getVideoState(), null, null);
+
+                        // 记录新的播放位置
+                        playingPlayerInList = listPlayer;
+                        playingPlayerInListPosition = position;
+                        playingUrl = listPlayer.getUrl();
+                        playingName = listPlayer.getVideoName();
+                        playingState = playingPlayerInList.getVideoState();
                     }
 
                     tinyPlayer.stopAndReset();
@@ -299,21 +367,12 @@ public final class ListVideoHelper {
     }
 
     /**
-     * @param listView
-     */
-
-    protected static void processRecyclerScroll(RecyclerView listView) {
-
-    }
-
-
-    /**
      * 播放新视频的时候，退出小窗
      */
     public static void stopWhenNewVideoPlay() {
         Timber.d("播放新视频，退出小窗");
 
-        if (tinyWindowPosition >= 0) {
+        if (tinyWindowPosition >= 0 && tinyWhenOutScreen) {
             VideoPlayer tinyPlayer = reference.get();
             if (tinyPlayer != null && tinyPlayer.getVisibility() == View.VISIBLE) {
 
@@ -323,5 +382,35 @@ public final class ListVideoHelper {
                 tinyWindowPosition = -1;
             }
         }
+    }
+
+    /**
+     * 清理资源
+     */
+    public static void release() {
+        reference.clear();
+        reference = null;
+        tinyWhenOutScreen = false;
+        playInList = false;
+        playingPlayerInList = null;
+        playingUrl = null;
+        playingName = null;
+
+    }
+
+    public static boolean isTinyWhenOutScreen() {
+        return tinyWhenOutScreen;
+    }
+
+    public static void setTinyWhenOutScreen(boolean tinyWhenOutScreen) {
+        ListVideoHelper.tinyWhenOutScreen = tinyWhenOutScreen;
+    }
+
+    public static boolean isPlayInList() {
+        return playInList;
+    }
+
+    public static void setPlayInList(boolean playInList) {
+        ListVideoHelper.playInList = playInList;
     }
 }

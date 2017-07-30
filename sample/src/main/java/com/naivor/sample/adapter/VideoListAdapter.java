@@ -25,7 +25,6 @@ import com.naivor.adapter.AdapterOperator;
 import com.naivor.adapter.ListAdapter;
 import com.naivor.adapter.ListHolder;
 import com.naivor.player.VideoPlayer;
-import com.naivor.player.constant.ScreenState;
 import com.naivor.sample.R;
 import com.naivor.sample.data.DataRepo;
 import com.naivor.sample.data.VideoUrl;
@@ -54,6 +53,9 @@ public class VideoListAdapter extends ListAdapter<VideoUrl> {
     }
 
 
+    /**
+     * VideoListHolder
+     */
     public static class VideoListHolder extends ListHolder<VideoUrl> {
 
         @BindView(R.id.videoPlayer)
@@ -79,7 +81,7 @@ public class VideoListAdapter extends ListAdapter<VideoUrl> {
                     .override(320, 240)
                     .into(videoPlayer.getPreviewView());
 
-            videoPlayer.setUpInList(itemData.getUrl(), itemData.getName());
+            videoPlayer.setUp(itemData.getUrl(), itemData.getName());
 
         }
     }
