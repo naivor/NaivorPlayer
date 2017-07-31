@@ -58,6 +58,15 @@ public class RecyclerViewVideoActivity extends AppCompatActivity {
 
 
     @Override
+    public void onBackPressed() {
+
+        if (VideoPlayer.onBackPressed()) {
+            return;
+        }
+        super.onBackPressed();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:

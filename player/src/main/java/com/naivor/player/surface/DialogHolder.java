@@ -76,7 +76,7 @@ public class DialogHolder {
     protected boolean isPlayWithNotWifi = false;  //非wifi环境是否播放
 
     public DialogHolder(@NonNull Context context, @NonNull VideoController controller) {
-        this.context = context;
+        this.context = context.getApplicationContext();
         this.controller = controller;
     }
 

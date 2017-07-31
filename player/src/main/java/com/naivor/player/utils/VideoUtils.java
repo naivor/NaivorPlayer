@@ -18,7 +18,6 @@ package com.naivor.player.utils;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -111,17 +110,11 @@ public final class VideoUtils {
      * @param context
      * @return
      */
-    public static Activity getActivity(Context context) {
-        if (context == null) {
-            return null;
-        }
-
+    public static Activity getActivity(@NonNull Context context) {
         if (context instanceof Activity) {
             return (Activity) context;
         } else if (context instanceof ContextThemeWrapper) {
             return getActivity(((ContextThemeWrapper) context).getBaseContext());
-        } else if (context instanceof ContextWrapper) {
-            return getActivity(((ContextWrapper) context).getBaseContext());
         }
 
         return null;
@@ -136,7 +129,6 @@ public final class VideoUtils {
      */
     public static void saveProgress(String url, long progress) {
         SPUtils.save(url, progress);
-
     }
 
     /**
@@ -325,14 +317,13 @@ public final class VideoUtils {
     /**
      * 显示或隐藏 ActionBar
      *
-     * @param context
+     * @param activity
      * @param show
      */
-    public static void showSupportActionBar(Context context, boolean show) {
+    public static void showSupportActionBar(Activity activity, boolean show) {
 
         Timber.d("显示标题栏：%s", show);
 
-        Activity activity = VideoUtils.getActivity(context);
         if (activity != null) {
             if (activity instanceof AppCompatActivity) {
                 ActionBar ab = ((AppCompatActivity) activity).getSupportActionBar();

@@ -53,6 +53,14 @@ public class ListVideoActivity extends AppCompatActivity {
         listAdapter.setItems(DataRepo.get(context).getVideoUrls());
     }
 
+    @Override
+    public void onBackPressed() {
+
+        if (VideoPlayer.onBackPressed()) {
+            return;
+        }
+        super.onBackPressed();
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

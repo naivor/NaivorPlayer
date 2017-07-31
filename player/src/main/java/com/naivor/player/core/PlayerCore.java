@@ -128,12 +128,11 @@ public final class PlayerCore {
         Timber.i("添加list监听器，监听新视频播放");
 
         for (OnListVideoPlayListener l : listListeners) {
-            if (l != listListener) {
+            if (l != null && l != listListener) {
                 l.onNewVideo();
+                listListeners.remove(l);
 
                 release();
-
-                listListeners.remove(l);
             }
         }
 
@@ -272,7 +271,6 @@ public final class PlayerCore {
         if (player != null) {
             player.release();
         }
-
         player = null;
 
         videoRenderersFactory = null;
@@ -288,6 +286,10 @@ public final class PlayerCore {
 
         surfaceView = null;
         mediaSource = null;
+
+        if (listListeners != null) {
+            listListeners.clear();
+        }
 
     }
 

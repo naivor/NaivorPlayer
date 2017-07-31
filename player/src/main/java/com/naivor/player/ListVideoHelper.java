@@ -31,6 +31,7 @@ import com.naivor.player.core.PlayerCore;
 import com.naivor.player.utils.VideoUtils;
 
 import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 
 import lombok.NonNull;
 import timber.log.Timber;
@@ -42,14 +43,16 @@ import timber.log.Timber;
  */
 
 public final class ListVideoHelper {
+    protected static WeakReference<View> containerReference;
     protected static SoftReference<VideoPlayer> reference;
 
     protected static Context context;
 
+    protected static VideoPlayer currentPlayingPlayer;
+
     //是否开启小窗当播放器滑出屏幕的时候（仅在list中有用）
     protected static boolean tinyWhenOutScreen = false;
     protected static boolean playInList = false;
-
 
     protected static VideoPlayer playingPlayerInList;
     protected static int playingPlayerInListPosition;
@@ -98,6 +101,8 @@ public final class ListVideoHelper {
                 reference = new SoftReference<>(videoPlayer);
 
             }
+
+            containerReference = new WeakReference<View>(listView);
 
             listView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
                 @Override
@@ -299,7 +304,7 @@ public final class ListVideoHelper {
         if (playingPlayerInList != null && position == playingPlayerInListPosition) {
             if (tinyWhenOutScreen) {
                 VideoPlayer tinyPlayer = reference.get();
-                if (tinyPlayer != null) {
+                if (tinyPlayer != null && playingPlayerInList.isVideoInPlayState()) {
                     VideoPlayer.swapVideoPlayer(playingPlayerInList, tinyPlayer, playingState, playingUrl, playingName);
 
                     Timber.i("打开小窗");
@@ -391,10 +396,31 @@ public final class ListVideoHelper {
         if (reference != null) {
             reference.clear();
         }
+
+        if (containerReference != null) {
+            containerReference.clear();
+        }
+
+        if (currentPlayingPlayer != null) {
+            currentPlayingPlayer.stopAndReset();
+        }
+
+        if (playingPlayerInList != null) {
+            playingPlayerInList.stopAndReset();
+        }
+
+        PlayerCore.instance(context).release();
+
+        context = null;
         reference = null;
+        containerReference = null;
+        playingPlayerInList = null;
+
+        currentPlayingPlayer = null;
+
         tinyWhenOutScreen = false;
         playInList = false;
-        playingPlayerInList = null;
+
         playingUrl = null;
         playingName = null;
 

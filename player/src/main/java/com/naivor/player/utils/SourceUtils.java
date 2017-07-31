@@ -96,12 +96,13 @@ public final class SourceUtils {
     public static MediaSource buildMediaSource(@NonNull Context context, @NonNull Uri uri) {
         int type = getVideoType(uri);
 
-        DataSource.Factory mediaDataSourceFactory = buildDataSourceFactory(context, true);
+        Context appContext = context.getApplicationContext();
 
+        DataSource.Factory mediaDataSourceFactory = buildDataSourceFactory(appContext, true);
 
         EventLogger eventLogger = null;
         if (BuildConfig.DEBUG) {   //打印调试日志
-            TrackSelector trackSelector = PlayerCore.instance(context).getTrackSelector();
+            TrackSelector trackSelector = PlayerCore.instance(appContext).getTrackSelector();
             if (trackSelector != null && trackSelector instanceof MappingTrackSelector) {
                 eventLogger = new EventLogger((MappingTrackSelector) trackSelector);
             }
@@ -109,10 +110,10 @@ public final class SourceUtils {
 
         switch (type) {
             case TYPE_SS:
-                return new SsMediaSource(uri, buildDataSourceFactory(context, false),
+                return new SsMediaSource(uri, buildDataSourceFactory(appContext, false),
                         new DefaultSsChunkSource.Factory(mediaDataSourceFactory), mainHandler, eventLogger);
             case TYPE_DASH:
-                return new DashMediaSource(uri, buildDataSourceFactory(context, false),
+                return new DashMediaSource(uri, buildDataSourceFactory(appContext, false),
                         new DefaultDashChunkSource.Factory(mediaDataSourceFactory), mainHandler, eventLogger);
             case TYPE_HLS:
                 return new HlsMediaSource(uri, mediaDataSourceFactory, mainHandler, eventLogger);
