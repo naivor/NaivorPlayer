@@ -293,6 +293,15 @@ public final class PlayerCore {
 
     }
 
+    /**
+     * 释放资源
+     */
+    public static void releaseAll() {
+        if (playerCore != null) {
+            playerCore.release();
+        }
+    }
+
     public RenderersFactory getRenderersFactory() {
         return renderersFactory;
     }

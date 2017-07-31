@@ -409,8 +409,6 @@ public final class ListVideoHelper {
             playingPlayerInList.stopAndReset();
         }
 
-        PlayerCore.instance(context).release();
-
         context = null;
         reference = null;
         containerReference = null;

@@ -476,8 +476,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     @Override
     public void stop() {
         controlView.stop();
-
-        unBindPlayer();
+        setVideoState(VideoState.CURRENT_STATE_COMPLETE);
     }
 
     @Override
@@ -562,7 +561,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      * @param state
      */
     protected void setVideoState(@VideoState.VideoStateValue int state) {
-        Timber.d("改变当前播放状态:%s", VideoState.getVideoStateName(state));
+        Timber.d("改变当前播放状态:%s,%s", VideoState.getVideoStateName(videoState), VideoState.getVideoStateName(state));
 
         if (!autoPrepare && isPrepare() && state == VideoState.CURRENT_STATE_PLAYING_BUFFERING) {
             onPrepared();
@@ -607,9 +606,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      * @param state
      */
     protected void updateUiAndState(@VideoState.VideoStateValue int state) {
-        if (!(videoState != VideoState.CURRENT_STATE_PLAYING
-                && state != VideoState.CURRENT_STATE_ORIGIN
-                && screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN)) {
+        if (videoState != VideoState.CURRENT_STATE_PLAYING
+                && state != VideoState.CURRENT_STATE_ORIGIN) {
 
             updateBottomProgress();
 
@@ -777,6 +775,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
                     if (viewParent != vp) {
                         Timber.i("全屏播放 444");
+                        originScreenState = screenState;
 
                         parent = (ViewGroup) viewParent;
                         indexInParent = parent.indexOfChild(this);
@@ -785,15 +784,13 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
                         pause();
 
+                        activity.setRequestedOrientation(fullscreenOrientation);
+                        VideoUtils.showSupportActionBar(activity, false);
+
                         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
                         vp.addView(this, lp);
-
-                        activity.setRequestedOrientation(fullscreenOrientation);
-                        VideoUtils.showSupportActionBar(activity, false);
-
-                        originScreenState = screenState;
 
                         if (lockFullScreen) {
                             setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
@@ -887,6 +884,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
                         }
 
                         resume();
+
                     } else if (isList) {
                         setVisibility(VISIBLE);
                     }
@@ -1280,7 +1278,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
         if (videoState != VideoState.CURRENT_STATE_ORIGIN) {
             stop();
-            unBindPlayer();
             setVideoState(VideoState.CURRENT_STATE_ORIGIN);
         }
     }
@@ -1370,5 +1367,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      */
     public static void releaseAll() {
         ListVideoHelper.release();
+        PlayerCore.releaseAll();
     }
 }
