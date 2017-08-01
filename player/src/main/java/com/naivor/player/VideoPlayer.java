@@ -169,7 +169,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
                         resume();
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS:  //失去音频焦点，停止播放
-//                        stop();
+                        stopAndReset();
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:  //短暂失去音频焦点，暂停播放
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:  //闪避，暂停播放
@@ -203,7 +203,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      * @param context
      */
     protected void init(@lombok.NonNull Context context) {
-        this.context = context;
+        this.context = context.getApplicationContext();
 
         //背景
         setBackgroundColor(frameBackground);
@@ -354,13 +354,9 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     protected void bindPlayer() {
         Timber.d("准备播放器");
 
-        PlayerCore playerCore = PlayerCore.instance(context);
+        controlView.setPlayer(PlayerCore.instance(context).getPlayer());
 
-        SimpleExoPlayer player = playerCore.getPlayer();
-        controlView.setPlayer(player);
-
-        playerCore.setEventListener(this);
-        playerCore.setVideoListener(this);
+        PlayerCore.registerListener(this, this);
 
         removeTextureView();
         addTextureView();
@@ -382,14 +378,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     protected void unBindPlayer() {
         Timber.d("反注册监听");
 
-        PlayerCore playerCore = PlayerCore.instance(context);
-
         controlView.setPlayer(null);
 
         removeTextureView();
 
-        playerCore.setEventListener(null);
-        playerCore.setVideoListener(null);
+        PlayerCore.unRegisterListener(this, this);
 
         if (mAudioManager != null) {
             mAudioManager.abandonAudioFocus(onAudioFocusChangeListener);
@@ -606,8 +599,8 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      * @param state
      */
     protected void updateUiAndState(@VideoState.VideoStateValue int state) {
-        if (videoState != VideoState.CURRENT_STATE_PLAYING
-                && state != VideoState.CURRENT_STATE_ORIGIN) {
+
+        if (videoState != state) {
 
             updateBottomProgress();
 
@@ -617,20 +610,53 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
 
             Timber.i(" %s 显示预览：%s", hashCode(), VideoState.getVideoStateName(state));
             //显示预览
-            if (state == VideoState.CURRENT_STATE_ORIGIN || state == VideoState.CURRENT_STATE_COMPLETE) {
-                videoPreview.showPreview(autoPrepare && !isScreenList());
-            } else {
-                videoPreview.hidePreview();
+            if (videoPreview != null) {
+                if (shouldShowPreview(state)) {
+                    videoPreview.showPreview(autoPrepare && !isScreenList());
+                } else {
+                    videoPreview.hidePreview();
+                }
             }
 
             //自动缓冲避免显示缓冲状态
-            if (autoPrepare && !isScreenList() && (isPrepare() || isBuffering())
-                    && !PlayerCore.instance(context).getPlayer().getPlayWhenReady()) {
-                return;
+            if (shouldUpdateControll(state)) {
+                controlView.updateVideoState(state);
             }
-
-            controlView.updateVideoState(state);
         }
+    }
+
+    /**
+     * 是否应该更新控制界面
+     *
+     * @return
+     */
+    protected boolean shouldUpdateControll(@VideoState.VideoStateValue int state) {
+
+        if (autoPrepare && (state == VideoState.CURRENT_STATE_PREPARING
+                || state == VideoState.CURRENT_STATE_PLAYING_BUFFERING)) {
+            return PlayerCore.instance(context).getPlayer().getPlayWhenReady();
+        }
+
+        return !(videoState == VideoState.CURRENT_STATE_PLAYING
+                && state == VideoState.CURRENT_STATE_ORIGIN
+                && screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN);
+    }
+
+    /**
+     * 是否应该显示预览
+     *
+     * @param state
+     * @return
+     */
+    protected boolean shouldShowPreview(@VideoState.VideoStateValue int state) {
+        boolean shouldShow = state == VideoState.CURRENT_STATE_ORIGIN
+                || state == VideoState.CURRENT_STATE_COMPLETE;
+        if (shouldShow) {
+            return !(videoState == VideoState.CURRENT_STATE_PLAYING
+                    && state == VideoState.CURRENT_STATE_ORIGIN
+                    && screenState == ScreenState.SCREEN_WINDOW_FULLSCREEN);
+        }
+        return shouldShow;
     }
 
 
@@ -746,6 +772,11 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         if (backOriginWindow()) {
             lastQuiteFullScreenTime = System.currentTimeMillis();
             return true;
+        }
+
+
+        if (isVideoInPlayState()) {
+            stop();
         }
 
         VideoUtils.saveProgress(url, getCurrentDuration());
@@ -1209,7 +1240,7 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        Timber.d("onAttachedToWindow");
+        Timber.d("%s onAttachedToWindow", hashCode());
 
         Activity activity = getActivity();
         if (activity != null) {
@@ -1287,12 +1318,12 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
      */
     public void release() {
         Timber.i("释放资源");
-        context = null;
-
         if (mAudioManager != null) {
             mAudioManager.abandonAudioFocus(onAudioFocusChangeListener);
         }
         VideoUtils.clearSavedAutoPause(url);
+
+        releaseAll();
 
         autoPrepare = false;
         dialogHolder = null;
@@ -1303,8 +1334,6 @@ public class VideoPlayer extends FrameLayout implements OnControllViewListener, 
         videoName = null;
         playEventListener = null;
         videoPreview = null;
-
-        releaseAll();
     }
 
 

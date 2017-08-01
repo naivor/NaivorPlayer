@@ -294,6 +294,44 @@ public final class PlayerCore {
     }
 
     /**
+     * 注册监听器
+     *
+     * @param eventListener
+     * @param videoListener
+     */
+    public static void registerListener(ExoPlayer.EventListener eventListener,
+                                        SimpleExoPlayer.VideoListener videoListener) {
+        if (playerCore != null) {
+            if (eventListener != null && eventListener != playerCore.eventListener) {
+                playerCore.setEventListener(eventListener);
+            }
+
+            if (videoListener != null && videoListener != playerCore.videoListener) {
+                playerCore.setVideoListener(videoListener);
+            }
+        }
+    }
+
+    /**
+     * 取消注册的监听器
+     *
+     * @param eventListener
+     * @param videoListener
+     */
+    public static void unRegisterListener(ExoPlayer.EventListener eventListener,
+                                          SimpleExoPlayer.VideoListener videoListener) {
+        if (playerCore != null) {
+            if (eventListener != null && eventListener == playerCore.eventListener) {
+                playerCore.setEventListener(null);
+            }
+
+            if (videoListener != null && videoListener == playerCore.videoListener) {
+                playerCore.setVideoListener(null);
+            }
+        }
+    }
+
+    /**
      * 释放资源
      */
     public static void releaseAll() {

@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.bumptech.glide.Glide;
 import com.naivor.player.VideoPlayer;
 import com.naivor.player.constant.ScreenState;
 import com.naivor.sample.R;
@@ -58,13 +57,13 @@ public class NaivorPlayerActivity extends AppCompatActivity {
             Timber.d("测试地址：%s", videoUrl.toString());
 
             //自动缓冲
-//            videoPlayer.setAutoPrepare(true);
+            videoPlayer.setAutoPrepare(true);
 
             //加载封面
-            Glide.with(this)
-                    .load(DataRepo.VIDEO_COVER)
-                    .override(320, 240)
-                    .into(videoPlayer.getPreviewView());
+//            Glide.with(this)
+//                    .load(DataRepo.VIDEO_COVER)
+//                    .override(320, 240)
+//                    .into(videoPlayer.getPreviewView());
 
             //设置播放源
             videoPlayer.setUp(videoUrl.getUrl(), videoUrl.getName());
@@ -72,7 +71,7 @@ public class NaivorPlayerActivity extends AppCompatActivity {
 //            videoPlayer.setScreenState(ScreenState.SCREEN_WINDOW_FULLSCREEN_LOCK);
 
             //开始播放
-            videoPlayer.start();
+//            videoPlayer.start();
         }
     }
 
