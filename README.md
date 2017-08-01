@@ -22,7 +22,7 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 2. 添加view (宽高按需要)
 
    ```
-    <VideoPlayerNewVideoPlay
+       <com.naivor.player.VideoPlayer
            android:id="@+id/videoPlayer"
            android:layout_width="match_parent"
            android:layout_height="240dp" />
@@ -32,7 +32,7 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
 
    ```
       //设置播放源
-      videoPlayer.setUp(url,ScreenState.SCREEN_LAYOUT_ORIGIN,"视频名字");
+      videoPlayer.setUp(url,"视频名字");
    ```
 
 4. 播放
@@ -84,8 +84,14 @@ NaivorPlayer  是一个Android平台上面的视频播放库，基于Exoplayer�
      VideoPlayer.setTinyWidth(tinyWidth);
      VideoPlayer.setTinyHeight(tinyHeight);
      ```
+   *  播放视频监听
 
-     ​
+      ```
+      videoPlayer.setPlayEventListener(playEventListener);
+      ```  
+   
+    
+     ​
 
 
 
